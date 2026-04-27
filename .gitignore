@@ -20,6 +20,7 @@ expo-env.d.ts
 
 # Metro
 .metro-health-check*
+.expo-start.*
 
 # debug
 npm-debug.*
@@ -37,6 +38,9 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
+
+# Codex local notes
+codex/
 
 # generated native folders
 /ios
