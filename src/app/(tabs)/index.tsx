@@ -1,22 +1,88 @@
-import { useMemo, useState } from 'react';
+import { useIsFocused } from '@react-navigation/native';
+import * as Location from 'expo-location';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CategoryFilter } from '@/components/winwin/CategoryFilter';
 import { MatchingCard } from '@/components/winwin/MatchingCard';
-import { mockMatchings } from '@/data/matchings';
+import { getAllMatchings } from '@/data/matchings';
 import type { Category } from '@/data/matchings';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const isFocused = useIsFocused();
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<Category>('all');
+  const [matchings, setMatchings] = useState(() => getAllMatchings());
+  const [currentLocation, setCurrentLocation] = useState('위치를 확인해보세요');
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
+
+  const handleFetchLocation = async () => {
+    setIsFetchingLocation(true);
+    setLocationError(null);
+
+    try {
+      const permission = await Location.requestForegroundPermissionsAsync();
+
+      if (permission.status !== 'granted') {
+        setLocationError('위치 권한이 허용되지 않았어요.');
+        setCurrentLocation('위치 권한 필요');
+        return;
+      }
+
+      const position = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      const address = await Location.reverseGeocodeAsync({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      });
+
+      const firstAddress = address[0];
+
+      if (firstAddress) {
+        const district = firstAddress.district ?? firstAddress.subregion;
+        const neighborhood =
+          firstAddress.street ??
+          firstAddress.name ??
+          firstAddress.city ??
+          '현재 위치';
+
+        setCurrentLocation(
+          district ? `${district} ${neighborhood}` : neighborhood,
+        );
+        return;
+      }
+
+      setCurrentLocation(
+        `위도 ${position.coords.latitude.toFixed(3)}, 경도 ${position.coords.longitude.toFixed(3)}`,
+      );
+    } catch {
+      setLocationError('현재 위치를 가져오지 못했어요.');
+      setCurrentLocation('위치를 다시 확인해주세요');
+    } finally {
+      setIsFetchingLocation(false);
+    }
+  };
+
+  useEffect(() => {
+    handleFetchLocation();
+  }, []);
+
+  useEffect(() => {
+    if (isFocused) {
+      setMatchings(getAllMatchings());
+    }
+  }, [isFocused]);
 
   const filteredMatchings = useMemo(() => {
     const keyword = query.trim().toLowerCase();
 
-    return mockMatchings.filter((matching) => {
+    return matchings.filter((matching) => {
       const matchesCategory =
         selectedCategory === 'all' || matching.category === selectedCategory;
 
@@ -41,7 +107,7 @@ export default function HomeScreen() {
     });
   }, [query, selectedCategory]);
 
-  const premiumCount = mockMatchings.filter((matching) => matching.premium).length;
+  const premiumCount = matchings.filter((matching) => matching.premium).length;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -66,8 +132,27 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.locationBox}>
-          <Text style={styles.locationLabel}>현재 위치</Text>
-          <Text style={styles.locationText}>강남구 역삼동</Text>
+          <View style={styles.locationHeader}>
+            <Text style={styles.locationLabel}>현재 위치</Text>
+
+            <Pressable
+              accessibilityRole="button"
+              onPress={handleFetchLocation}
+              style={styles.locationRefreshButton}>
+              <Text style={styles.locationRefreshButtonText}>
+                {isFetchingLocation ? '확인 중' : '새로고침'}
+              </Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.locationValueRow}>
+            {isFetchingLocation ? (
+              <ActivityIndicator size="small" color="#6D5DFB" />
+            ) : null}
+            <Text style={styles.locationText}>{currentLocation}</Text>
+          </View>
+
+          {locationError ? <Text style={styles.locationErrorText}>{locationError}</Text> : null}
         </View>
 
         <CategoryFilter selected={selectedCategory} onSelect={setSelectedCategory} />
@@ -175,15 +260,46 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
+  locationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
   locationLabel: {
     color: '#8A8F98',
     fontSize: 12,
     fontWeight: '700',
   },
+  locationRefreshButton: {
+    minHeight: 28,
+    borderRadius: 999,
+    backgroundColor: '#F1F3F6',
+    paddingHorizontal: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  locationRefreshButtonText: {
+    color: '#6D5DFB',
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  locationValueRow: {
+    marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   locationText: {
-    marginTop: 4,
+    flex: 1,
     color: '#15181D',
     fontSize: 16,
+    fontWeight: '700',
+  },
+  locationErrorText: {
+    marginTop: 8,
+    color: '#D33A2C',
+    fontSize: 12,
     fontWeight: '700',
   },
   summaryBox: {

@@ -2,12 +2,21 @@ export type Category = 'all' | 'hair' | 'nail' | 'eyelash' | 'food' | 'accommoda
 
 export type MatchingCategory = Exclude<Category, 'all'>;
 
+export interface MatchingCoordinates {
+  latitude: number;
+  longitude: number;
+}
+
 export interface Matching {
   id: string;
   category: MatchingCategory;
   image: string;
   shopName: string;
   location: string;
+  locationCoordinates?: MatchingCoordinates;
+  locationDetail?: string;
+  locationDetailCoordinates?: MatchingCoordinates;
+  locationVisibility?: 'summary-only' | 'exact-public';
   service: string;
   requirements: string[];
   deadline: string;
@@ -17,6 +26,21 @@ export interface Matching {
   portfolio?: string[];
   deposit?: number;
 }
+
+export type MatchingPostDraft = {
+  category: MatchingCategory;
+  shopName: string;
+  location: string;
+  locationCoordinates: MatchingCoordinates;
+  locationDetail?: string;
+  locationDetailCoordinates: MatchingCoordinates;
+  locationVisibility: 'summary-only' | 'exact-public';
+  service: string;
+  requirements: string[];
+  availableDates: string[];
+  deposit: number;
+  description?: string;
+};
 
 export const categoryLabels: Record<MatchingCategory, string> = {
   hair: '헤어',
@@ -179,3 +203,36 @@ export const mockMatchings: Matching[] = [
     deposit: 5000,
   },
 ];
+
+const userPostedMatchings: Matching[] = [];
+
+export function getAllMatchings() {
+  return [...userPostedMatchings, ...mockMatchings];
+}
+
+export function addPostedMatching(draft: MatchingPostDraft) {
+  const newMatching: Matching = {
+    id: `posted-${Date.now()}`,
+    category: draft.category,
+    image: 'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=600',
+    shopName: draft.shopName,
+    location: draft.location,
+    locationCoordinates: draft.locationCoordinates,
+    locationDetail: draft.locationDetail,
+    locationDetailCoordinates: draft.locationDetailCoordinates,
+    locationVisibility: draft.locationVisibility,
+    service: draft.service,
+    requirements: draft.requirements,
+    deadline: draft.availableDates[0] ?? new Date().toISOString().slice(0, 10),
+    availableDates: draft.availableDates,
+    description: draft.description,
+    deposit: draft.deposit,
+  };
+
+  userPostedMatchings.unshift(newMatching);
+  return newMatching;
+}
+
+export function getPostedMatchings() {
+  return [...userPostedMatchings];
+}

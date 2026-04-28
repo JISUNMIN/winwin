@@ -23,8 +23,12 @@ import type { BookingData } from '@/components/winwin/BookingRequestCard';
 import { DesiredScheduleCard } from '@/components/winwin/DesiredScheduleCard';
 import { ImageMessageCard } from '@/components/winwin/ImageMessageCard';
 import { PaymentModal } from '@/components/winwin/PaymentModal';
+import { ShopChatActionBar } from '@/components/winwin/ShopChatActionBar';
+import { ShopChatHeaderActions } from '@/components/winwin/ShopChatHeaderActions';
+import { ShopChatStatusCard } from '@/components/winwin/ShopChatStatusCard';
 import { ShopScheduleReviewCard } from '@/components/winwin/ShopScheduleReviewCard';
-import { mockMatchings } from '@/data/matchings';
+import { getShopConsultationByMatchingId } from '@/data/consultations';
+import { getAllMatchings } from '@/data/matchings';
 
 export type ViewerRole = 'customer' | 'shopOwner';
 
@@ -49,30 +53,25 @@ type ChatScreenProps = {
   allowRoleSwitch?: boolean;
 };
 
-function formatMessageTime(date: Date) {
-  return date.toLocaleTimeString('ko-KR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
+type BookingFlowStatus =
+  | 'idle'
+  | 'reviewing-schedules'
+  | 'booking-request-sent'
+  | 'payment-completed';
 
-export function ChatScreen({
-  initialViewerRole,
-  allowRoleSwitch = false,
-}: ChatScreenProps) {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const matching = mockMatchings.find((item) => item.id === id);
-  const scrollRef = useRef<ScrollView>(null);
-  const [viewerRole, setViewerRole] = useState<ViewerRole>(initialViewerRole);
-  const [inputMessage, setInputMessage] = useState('');
-  const [showBookingPicker, setShowBookingPicker] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState<BookingData | null>(null);
-  const [messages, setMessages] = useState<Message[]>([
+type BookingFlowState = {
+  status: BookingFlowStatus;
+  desiredScheduleCount: number;
+  selectedBooking: BookingData | null;
+};
+
+function createDefaultMessages(shopName: string): Message[] {
+  return [
     {
       id: '1',
       senderRole: 'shopOwner',
       type: 'text',
-      content: `안녕하세요! ${matching?.shopName ?? '매장'}입니다. 지원해주셔서 감사합니다.`,
+      content: `안녕하세요! ${shopName}입니다. 지원해주셔서 감사합니다.`,
       timestamp: new Date(Date.now() - 3600000),
     },
     {
@@ -89,11 +88,96 @@ export function ChatScreen({
       content: '상담을 위해 현재 상태와 가능한 방문 시간을 알려주세요.',
       timestamp: new Date(Date.now() - 3500000),
     },
-  ]);
+  ];
+}
+
+function createDefaultBookingFlowState(): BookingFlowState {
+  return {
+    status: 'idle',
+    desiredScheduleCount: 0,
+    selectedBooking: null,
+  };
+}
+
+function formatMessageTime(date: Date) {
+  return date.toLocaleTimeString('ko-KR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+export function ChatScreen({
+  initialViewerRole,
+  allowRoleSwitch = false,
+}: ChatScreenProps) {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const matching = getAllMatchings().find((item) => item.id === id);
+  const consultation = id ? getShopConsultationByMatchingId(id) : undefined;
+  const scrollRef = useRef<ScrollView>(null);
+  const messageOffsetsRef = useRef<Record<string, number>>({});
+  const [viewerRole, setViewerRole] = useState<ViewerRole>(initialViewerRole);
+  const [inputMessage, setInputMessage] = useState('');
+  const [showBookingPicker, setShowBookingPicker] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<BookingData | null>(null);
+  const [bookingFlowState, setBookingFlowState] = useState<BookingFlowState>(() =>
+    consultation
+      ? {
+          status: consultation.bookingFlow.status,
+          desiredScheduleCount: consultation.bookingFlow.desiredScheduleCount,
+          selectedBooking: consultation.bookingFlow.selectedBooking,
+        }
+      : createDefaultBookingFlowState(),
+  );
+  const [messages, setMessages] = useState<Message[]>(() =>
+    consultation
+      ? consultation.messages.map((message) => ({
+          id: message.id,
+          senderRole: message.senderRole,
+          type: message.type,
+          content: message.content,
+          timestamp: new Date(Date.now() - message.minutesAgo * 60000),
+          desiredScheduleOptions: message.desiredScheduleOptions,
+          bookingData: message.bookingData,
+        }))
+      : createDefaultMessages(matching?.shopName ?? '매장'),
+  );
 
   useEffect(() => {
     setViewerRole(initialViewerRole);
   }, [initialViewerRole]);
+
+  useEffect(() => {
+    if (!matching) {
+      return;
+    }
+
+    setMessages(
+      consultation
+        ? consultation.messages.map((message) => ({
+            id: message.id,
+            senderRole: message.senderRole,
+            type: message.type,
+            content: message.content,
+            timestamp: new Date(Date.now() - message.minutesAgo * 60000),
+            desiredScheduleOptions: message.desiredScheduleOptions,
+            bookingData: message.bookingData,
+          }))
+        : createDefaultMessages(matching.shopName),
+    );
+    setBookingFlowState(
+      consultation
+        ? {
+            status: consultation.bookingFlow.status,
+            desiredScheduleCount: consultation.bookingFlow.desiredScheduleCount,
+            selectedBooking: consultation.bookingFlow.selectedBooking,
+          }
+        : createDefaultBookingFlowState(),
+    );
+    setSelectedBooking(null);
+    setInputMessage('');
+    setShowBookingPicker(false);
+    messageOffsetsRef.current = {};
+  }, [consultation, matching]);
 
   useEffect(() => {
     requestAnimationFrame(() => {
@@ -218,6 +302,11 @@ export function ChatScreen({
 
     setMessages((currentMessages) => [...currentMessages, desiredScheduleMessage]);
     setShowBookingPicker(false);
+    setBookingFlowState({
+      status: 'reviewing-schedules',
+      desiredScheduleCount: options.length,
+      selectedBooking: null,
+    });
 
     setTimeout(() => {
       const replyTime = Date.now();
@@ -281,10 +370,31 @@ export function ChatScreen({
         },
       ];
     });
+    setBookingFlowState((currentState) => ({
+      ...currentState,
+      status: 'booking-request-sent',
+      selectedBooking: bookingData,
+    }));
   };
 
   const handleAcceptBooking = (bookingData: BookingData) => {
     setSelectedBooking(bookingData);
+  };
+
+  const handlePressCustomerInfo = () => {
+    Alert.alert(
+      '고객 정보',
+      `이름: ${consultation?.customerName ?? '김고객'}\n방문 목적: 체험단 시술 상담\n요청 메모: ${
+        consultation?.customerNote ?? '평일 오후 방문 선호'
+      }`,
+    );
+  };
+
+  const handlePressCloseConsultation = () => {
+    Alert.alert(
+      '상담 종료',
+      '이 mock 화면에서는 상담 종료 후에도 메시지는 유지됩니다. 나중에 상태 변경 로직과 연결할 수 있어요.',
+    );
   };
 
   const handlePaymentComplete = (bookingData: BookingData) => {
@@ -298,6 +408,11 @@ export function ChatScreen({
 
     setMessages((currentMessages) => [...currentMessages, confirmMessage]);
     setSelectedBooking(null);
+    setBookingFlowState((currentState) => ({
+      ...currentState,
+      status: 'payment-completed',
+      selectedBooking: bookingData,
+    }));
   };
 
   const isCustomerViewer = viewerRole === 'customer';
@@ -305,6 +420,46 @@ export function ChatScreen({
   const modeDescription = isCustomerViewer
     ? '고객 기준으로 메시지와 예약 액션을 보여주고 있어요.'
     : '샵 기준으로 메시지와 일정 선택 액션을 보여주고 있어요.';
+  const customerMessageCount = messages.filter(
+    (message) => message.senderRole === 'customer',
+  ).length;
+  const desiredScheduleCount = bookingFlowState.desiredScheduleCount;
+  const latestDesiredScheduleMessage = [...messages]
+    .reverse()
+    .find((message) => message.type === 'desired-schedule');
+  const latestBookingRequestMessage = [...messages]
+    .reverse()
+    .find((message) => message.type === 'booking-request');
+  const bookingStatusLabel =
+    bookingFlowState.status === 'payment-completed'
+      ? '확정'
+      : bookingFlowState.status === 'booking-request-sent'
+        ? '결제대기'
+        : bookingFlowState.status === 'reviewing-schedules'
+          ? '검토중'
+          : '대기';
+  const nextActionText =
+    bookingFlowState.status === 'payment-completed'
+      ? '고객 결제가 완료됐어요. 방문 전 최종 안내 메시지를 보내보세요.'
+      : bookingFlowState.status === 'booking-request-sent'
+        ? '고객의 결제 완료 여부를 확인하고 예약 상태를 확정해보세요.'
+        : bookingFlowState.status === 'reviewing-schedules'
+          ? '고객이 보낸 희망 일정 중 가능한 시간을 골라 예약 요청을 보내보세요.'
+          : '먼저 고객의 상태와 방문 가능 시간을 상담으로 받아보세요.';
+
+  const scrollToMessage = (messageId: string | undefined) => {
+    if (!messageId) {
+      return;
+    }
+
+    const y = messageOffsetsRef.current[messageId];
+
+    if (typeof y !== 'number') {
+      return;
+    }
+
+    scrollRef.current?.scrollTo({ y: Math.max(y - 12, 0), animated: true });
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -329,6 +484,14 @@ export function ChatScreen({
               {matching.service}
             </Text>
           </View>
+
+          {!isCustomerViewer && !allowRoleSwitch && (
+            <ShopChatHeaderActions
+              statusLabel={bookingStatusLabel}
+              onPressCustomerInfo={handlePressCustomerInfo}
+              onPressCloseConsultation={handlePressCloseConsultation}
+            />
+          )}
 
           {allowRoleSwitch && (
             <View style={styles.roleSwitcher}>
@@ -370,11 +533,38 @@ export function ChatScreen({
             <Text style={styles.noticeSubtext}>{modeDescription}</Text>
           </View>
 
+          {!isCustomerViewer && (
+            <>
+              <ShopChatStatusCard
+                customerMessageCount={customerMessageCount}
+                desiredScheduleCount={desiredScheduleCount}
+                bookingStatusLabel={bookingStatusLabel}
+                nextActionText={nextActionText}
+              />
+
+              <ShopChatActionBar
+                canJumpToDesiredSchedule={latestDesiredScheduleMessage !== undefined}
+                canJumpToBookingRequest={latestBookingRequestMessage !== undefined}
+                onJumpToDesiredSchedule={() =>
+                  scrollToMessage(latestDesiredScheduleMessage?.id)
+                }
+                onJumpToBookingRequest={() =>
+                  scrollToMessage(latestBookingRequestMessage?.id)
+                }
+              />
+            </>
+          )}
+
           {messages.map((message) => {
             const isMine = message.senderRole === viewerRole;
 
             return (
-              <View key={message.id} style={[styles.messageRow, isMine && styles.userMessageRow]}>
+              <View
+                key={message.id}
+                onLayout={(event) => {
+                  messageOffsetsRef.current[message.id] = event.nativeEvent.layout.y;
+                }}
+                style={[styles.messageRow, isMine && styles.userMessageRow]}>
                 {message.type === 'image' && message.imageUri ? (
                   <View style={styles.cardMessage}>
                     <ImageMessageCard imageUri={message.imageUri} caption={message.content} />

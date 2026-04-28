@@ -1,19 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
+import type { Href } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   formatKoreanDate,
+  getAllMatchings,
   getCategoryLabel,
   getDaysUntil,
-  mockMatchings,
 } from '@/data/matchings';
 
 export default function MatchingDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const matching = mockMatchings.find((item) => item.id === id);
+  const matching = getAllMatchings().find((item) => item.id === id);
 
   if (!matching) {
     return (
@@ -157,14 +158,9 @@ export default function MatchingDetailScreen() {
       <View style={styles.bottomBar}>
         <Pressable
           accessibilityRole="button"
-          onPress={() =>
-            router.push({
-              pathname: '/shop/chat/[id]',
-              params: { id: matching.id },
-            })
-          }
+          onPress={() => router.push('/shop' as Href)}
           style={styles.secondaryActionButton}>
-          <Text style={styles.secondaryActionButtonText}>샵 화면 미리보기</Text>
+          <Text style={styles.secondaryActionButtonText}>샵 상담 목록</Text>
         </Pressable>
 
         <Pressable
