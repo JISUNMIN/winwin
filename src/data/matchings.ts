@@ -213,6 +213,10 @@ export function getAllMatchings() {
   return [...userPostedMatchings, ...mockMatchings];
 }
 
+export function getDiscoverableMatchings() {
+  return getAllMatchings().filter((matching) => (matching.postStatus ?? 'open') === 'open');
+}
+
 export function addPostedMatching(draft: MatchingPostDraft) {
   const newMatching: Matching = {
     id: `posted-${Date.now()}`,

@@ -2,9 +2,10 @@ import { useIsFocused } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { consumePostFeedbackMessage } from '@/data/post-feedback';
 import {
   formatKoreanDate,
   getPostedMatchings,
@@ -36,22 +37,59 @@ export default function ShopPostManageScreen() {
   const [postedMatchings, setPostedMatchings] = useState(() => getPostedMatchings());
   const [selectedFilter, setSelectedFilter] = useState<FilterKey>('all');
   const [selectedSort, setSelectedSort] = useState<SortKey>('latest');
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (isFocused) {
       setPostedMatchings(getPostedMatchings());
+      setFeedbackMessage(consumePostFeedbackMessage());
     }
   }, [isFocused]);
 
-  const openCreateScreen = () => router.push('/shop/post/new' as never);
+  useEffect(() => {
+    if (!feedbackMessage) {
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      setFeedbackMessage(null);
+    }, 2400);
+
+    return () => clearTimeout(timeout);
+  }, [feedbackMessage]);
+
+  const openCreateScreen = () => router.push('/partner/post/new' as never);
   const openCount = postedMatchings.filter((matching) => matching.postStatus !== 'closed').length;
   const closedCount = postedMatchings.filter((matching) => matching.postStatus === 'closed').length;
+  const normalizedQuery = searchQuery.trim().toLowerCase();
   const filteredMatchings = useMemo(
     () =>
-      postedMatchings.filter((matching) =>
-        selectedFilter === 'all' ? true : (matching.postStatus ?? 'open') === selectedFilter,
-      ),
-    [postedMatchings, selectedFilter],
+      postedMatchings.filter((matching) => {
+        const matchesFilter =
+          selectedFilter === 'all' ? true : (matching.postStatus ?? 'open') === selectedFilter;
+
+        if (!matchesFilter) {
+          return false;
+        }
+
+        if (!normalizedQuery) {
+          return true;
+        }
+
+        const searchableText = [
+          matching.shopName,
+          matching.service,
+          matching.location,
+          ...matching.requirements,
+        ]
+          .join(' ')
+          .toLowerCase();
+
+        return searchableText.includes(normalizedQuery);
+      }),
+    [postedMatchings, selectedFilter, normalizedQuery],
   );
   const sortedMatchings = useMemo(() => {
     const items = [...filteredMatchings];
@@ -76,6 +114,15 @@ export default function ShopPostManageScreen() {
     setPostedMatchings(getPostedMatchings());
   };
 
+  const handleApplySearch = () => {
+    setSearchQuery(searchInput.trim());
+  };
+
+  const handleClearSearch = () => {
+    setSearchInput('');
+    setSearchQuery('');
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -92,6 +139,13 @@ export default function ShopPostManageScreen() {
           <Text style={styles.title}>내 공고 관리</Text>
           <Text style={styles.subtitle}>등록한 공고를 모아 보고, 상세 화면으로 바로 들어갈 수 있어요.</Text>
         </View>
+
+        {feedbackMessage ? (
+          <View style={styles.feedbackBanner}>
+            <Ionicons name="checkmark-circle" size={18} color="#15803D" />
+            <Text style={styles.feedbackBannerText}>{feedbackMessage}</Text>
+          </View>
+        ) : null}
 
         <View style={styles.summaryCard}>
           <View style={styles.summaryBlock}>
@@ -122,6 +176,33 @@ export default function ShopPostManageScreen() {
 
         {postedMatchings.length > 0 && (
           <>
+            <View style={styles.searchBox}>
+              <Ionicons name="search" size={18} color="#8A8F98" />
+              <TextInput
+                value={searchInput}
+                onChangeText={setSearchInput}
+                placeholder="샵 이름, 서비스, 위치, 조건으로 검색"
+                placeholderTextColor="#8A8F98"
+                style={styles.searchInput}
+                returnKeyType="search"
+                onSubmitEditing={handleApplySearch}
+              />
+              <Pressable
+                accessibilityRole="button"
+                onPress={handleApplySearch}
+                style={styles.searchActionButton}>
+                <Text style={styles.searchActionButtonText}>검색</Text>
+              </Pressable>
+              {searchInput.trim() ? (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={handleClearSearch}
+                  style={styles.clearSearchButton}>
+                  <Ionicons name="close-circle" size={18} color="#8A8F98" />
+                </Pressable>
+              ) : null}
+            </View>
+
             <View style={styles.filterRow}>
               {filterOptions.map((option) => {
                 const isSelected = selectedFilter === option.key;
@@ -174,86 +255,96 @@ export default function ShopPostManageScreen() {
           </View>
         ) : (
           <View style={styles.list}>
-            {sortedMatchings.map((matching) => {
-              const nextDate = matching.availableDates?.[0] ?? matching.deadline;
-              const locationGuide =
-                matching.locationVisibility === 'summary-only'
-                  ? '예약 후 상세 위치 안내'
-                  : '상세 위치 바로 공개';
-              const isClosed = matching.postStatus === 'closed';
+            {sortedMatchings.length > 0 ? (
+              sortedMatchings.map((matching) => {
+                const nextDate = matching.availableDates?.[0] ?? matching.deadline;
+                const locationGuide =
+                  matching.locationVisibility === 'summary-only'
+                    ? '예약 후 상세 위치 안내'
+                    : '상세 위치 바로 공개';
+                const isClosed = matching.postStatus === 'closed';
 
-              return (
-                <View key={matching.id} style={styles.card}>
-                  <View style={styles.cardHeader}>
-                    <Text numberOfLines={1} style={styles.shopName}>
-                      {matching.shopName}
+                return (
+                  <View key={matching.id} style={styles.card}>
+                    <View style={styles.cardHeader}>
+                      <Text numberOfLines={1} style={styles.shopName}>
+                        {matching.shopName}
+                      </Text>
+                      <View style={[styles.statusBadge, isClosed && styles.statusBadgeClosed]}>
+                        <Text style={[styles.statusBadgeText, isClosed && styles.statusBadgeTextClosed]}>
+                          {isClosed ? '마감' : '모집중'}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <Text numberOfLines={1} style={styles.service}>
+                      {matching.service}
                     </Text>
-                    <View style={[styles.statusBadge, isClosed && styles.statusBadgeClosed]}>
-                      <Text style={[styles.statusBadgeText, isClosed && styles.statusBadgeTextClosed]}>
-                        {isClosed ? '마감' : '모집중'}
+
+                    <View style={styles.metaRow}>
+                      <Ionicons name="location-outline" size={15} color="#747B87" />
+                      <Text numberOfLines={1} style={styles.metaText}>
+                        {matching.location} · {locationGuide}
                       </Text>
                     </View>
+
+                    <View style={styles.metaRow}>
+                      <Ionicons name="calendar-outline" size={15} color="#747B87" />
+                      <Text style={styles.metaText}>
+                        다음 가능 날짜 {formatKoreanDate(nextDate)}
+                      </Text>
+                    </View>
+
+                    <View style={styles.bottomRow}>
+                      <Text style={styles.bottomText}>
+                        조건 {matching.requirements.length}개 · 보증금 {(matching.deposit ?? 0).toLocaleString()}원
+                      </Text>
+                    </View>
+
+                    <View style={styles.actionRow}>
+                      <Pressable
+                        accessibilityRole="button"
+                        onPress={() =>
+                          router.push({
+                            pathname: '/partner/post/[id]/edit',
+                            params: { id: matching.id },
+                          })
+                        }
+                        style={styles.secondaryButton}>
+                        <Text style={styles.secondaryButtonText}>수정</Text>
+                      </Pressable>
+
+                      <Pressable
+                        accessibilityRole="button"
+                        onPress={() =>
+                          router.push({
+                            pathname: '/matching/[id]',
+                            params: { id: matching.id },
+                          })
+                        }
+                        style={styles.secondaryButton}>
+                        <Text style={styles.secondaryButtonText}>상세 보기</Text>
+                      </Pressable>
+
+                      <Pressable
+                        accessibilityRole="button"
+                        onPress={() => togglePostStatus(matching.id, isClosed ? 'open' : 'closed')}
+                        style={[styles.primaryButton, isClosed && styles.primaryButtonMuted]}>
+                        <Text style={styles.primaryButtonText}>{isClosed ? '다시 모집' : '모집 마감'}</Text>
+                      </Pressable>
+                    </View>
                   </View>
-
-                  <Text numberOfLines={1} style={styles.service}>
-                    {matching.service}
-                  </Text>
-
-                  <View style={styles.metaRow}>
-                    <Ionicons name="location-outline" size={15} color="#747B87" />
-                    <Text numberOfLines={1} style={styles.metaText}>
-                      {matching.location} · {locationGuide}
-                    </Text>
-                  </View>
-
-                  <View style={styles.metaRow}>
-                    <Ionicons name="calendar-outline" size={15} color="#747B87" />
-                    <Text style={styles.metaText}>
-                      다음 가능 날짜 {formatKoreanDate(nextDate)}
-                    </Text>
-                  </View>
-
-                  <View style={styles.bottomRow}>
-                    <Text style={styles.bottomText}>
-                      조건 {matching.requirements.length}개 · 보증금 {(matching.deposit ?? 0).toLocaleString()}원
-                    </Text>
-                  </View>
-
-                  <View style={styles.actionRow}>
-                    <Pressable
-                      accessibilityRole="button"
-                      onPress={() =>
-                        router.push({
-                          pathname: '/shop/post/[id]/edit',
-                          params: { id: matching.id },
-                        })
-                      }
-                      style={styles.secondaryButton}>
-                      <Text style={styles.secondaryButtonText}>수정</Text>
-                    </Pressable>
-
-                    <Pressable
-                      accessibilityRole="button"
-                      onPress={() =>
-                        router.push({
-                          pathname: '/matching/[id]',
-                          params: { id: matching.id },
-                        })
-                      }
-                      style={styles.secondaryButton}>
-                      <Text style={styles.secondaryButtonText}>상세 보기</Text>
-                    </Pressable>
-
-                    <Pressable
-                      accessibilityRole="button"
-                      onPress={() => togglePostStatus(matching.id, isClosed ? 'open' : 'closed')}
-                      style={[styles.primaryButton, isClosed && styles.primaryButtonMuted]}>
-                      <Text style={styles.primaryButtonText}>{isClosed ? '다시 모집' : '모집 마감'}</Text>
-                    </Pressable>
-                  </View>
-                </View>
-              );
-            })}
+                );
+              })
+            ) : (
+              <View style={styles.searchEmptyCard}>
+                <Ionicons name="search-outline" size={26} color="#8A8F98" />
+                <Text style={styles.searchEmptyTitle}>검색 결과가 없어요</Text>
+                <Text style={styles.searchEmptyText}>
+                  검색어를 줄이거나 상태 필터를 바꿔서 다시 찾아보세요.
+                </Text>
+              </View>
+            )}
           </View>
         )}
       </ScrollView>
@@ -284,6 +375,24 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 16,
+  },
+  feedbackBanner: {
+    marginBottom: 14,
+    borderRadius: 14,
+    backgroundColor: '#ECFDF3',
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  feedbackBannerText: {
+    flex: 1,
+    color: '#166534',
+    fontSize: 13,
+    fontWeight: '800',
   },
   title: {
     color: '#15181D',
@@ -345,6 +454,42 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '900',
+  },
+  searchBox: {
+    marginTop: 14,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 14,
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    color: '#15181D',
+    fontSize: 14,
+    fontWeight: '600',
+    paddingVertical: 12,
+  },
+  searchActionButton: {
+    minHeight: 34,
+    borderRadius: 999,
+    backgroundColor: '#15181D',
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  searchActionButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  clearSearchButton: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   filterRow: {
     marginTop: 14,
@@ -434,6 +579,26 @@ const styles = StyleSheet.create({
   list: {
     marginTop: 18,
     gap: 12,
+  },
+  searchEmptyCard: {
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    padding: 24,
+    alignItems: 'center',
+  },
+  searchEmptyTitle: {
+    marginTop: 10,
+    color: '#15181D',
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  searchEmptyText: {
+    marginTop: 8,
+    color: '#666C77',
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   card: {
     borderRadius: 18,

@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   formatConsultationUpdatedText,
-  mockShopConsultations,
+  mockPartnerConsultations,
   type ConsultationStatusTone,
 } from '@/data/consultations';
 import { formatKoreanDate, getPostedMatchings, mockMatchings } from '@/data/matchings';
@@ -51,7 +51,7 @@ function getStatusStyles(tone: ConsultationStatusTone) {
   };
 }
 
-export default function ShopHomeScreen() {
+export default function PartnerHomeScreen() {
   const isFocused = useIsFocused();
   const [selectedFilter, setSelectedFilter] = useState<FilterKey>('all');
   const [postedMatchings, setPostedMatchings] = useState(() => getPostedMatchings());
@@ -64,7 +64,7 @@ export default function ShopHomeScreen() {
 
   const consultationItems = useMemo(
     () =>
-      mockShopConsultations
+      mockPartnerConsultations
         .map((status) => {
           const matching = mockMatchings.find((item) => item.id === status.matchingId);
 
@@ -99,13 +99,13 @@ export default function ShopHomeScreen() {
         </View>
 
         <View style={styles.header}>
-          <Text style={styles.title}>샵 상담 목록</Text>
+          <Text style={styles.title}>파트너 상담 목록</Text>
           <Text style={styles.subtitle}>진행 중인 상담과 예약 상태를 한 번에 확인하세요.</Text>
         </View>
 
         <Pressable
           accessibilityRole="button"
-          onPress={() => router.push('/shop/post' as never)}
+          onPress={() => router.push('/partner/post' as never)}
           style={styles.managePostButton}>
           <Ionicons name="document-text-outline" size={18} color="#15181D" />
           <View style={styles.managePostTextBlock}>
@@ -119,7 +119,7 @@ export default function ShopHomeScreen() {
 
         <Pressable
           accessibilityRole="button"
-          onPress={() => router.push('/shop/post/new' as never)}
+          onPress={() => router.push('/partner/post/new' as never)}
           style={styles.createPostButton}>
           <Ionicons name="add-circle-outline" size={18} color="#FFFFFF" />
           <Text style={styles.createPostButtonText}>새 공고 등록</Text>
@@ -174,7 +174,7 @@ export default function ShopHomeScreen() {
                 key={item.matching.id}
                 onPress={() =>
                   router.push({
-                    pathname: '/shop/chat/[id]',
+                    pathname: '/partner/chat/[id]',
                     params: { id: item.matching.id },
                   })
                 }

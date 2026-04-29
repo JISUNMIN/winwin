@@ -10,9 +10,9 @@ export type ConsultationBookingStatus =
 export type ConsultationMessageType =
   | 'text'
   | 'desired-schedule'
-  | 'shop-schedule-review'
+  | 'partner-schedule-review'
   | 'booking-request';
-export type ConsultationViewerRole = 'customer' | 'shopOwner';
+export type ConsultationViewerRole = 'customer' | 'partner';
 
 export type ConsultationSeedMessage = {
   id: string;
@@ -24,7 +24,7 @@ export type ConsultationSeedMessage = {
   bookingData?: BookingData;
 };
 
-export type ShopConsultation = {
+export type PartnerConsultation = {
   matchingId: string;
   customerName: string;
   customerNote: string;
@@ -41,7 +41,7 @@ export type ShopConsultation = {
   messages: ConsultationSeedMessage[];
 };
 
-export const mockShopConsultations: ShopConsultation[] = [
+export const mockPartnerConsultations: PartnerConsultation[] = [
   {
     matchingId: '1',
     customerName: '김하늘',
@@ -59,7 +59,7 @@ export const mockShopConsultations: ShopConsultation[] = [
     messages: [
       {
         id: 'm1',
-        senderRole: 'shopOwner',
+        senderRole: 'partner',
         type: 'text',
         content: '안녕하세요! 블룸 헤어살롱입니다. 지원해주셔서 감사합니다.',
         minutesAgo: 110,
@@ -73,7 +73,7 @@ export const mockShopConsultations: ShopConsultation[] = [
       },
       {
         id: 'm3',
-        senderRole: 'shopOwner',
+        senderRole: 'partner',
         type: 'text',
         content: '좋아요. 가능한 방문 시간을 몇 개 알려주시면 확인해볼게요.',
         minutesAgo: 100,
@@ -92,15 +92,15 @@ export const mockShopConsultations: ShopConsultation[] = [
       },
       {
         id: 'm5',
-        senderRole: 'shopOwner',
+        senderRole: 'partner',
         type: 'text',
         content: '보내주신 일정 확인했어요. 가능한 시간을 골라 예약 요청을 보낼게요.',
         minutesAgo: 12,
       },
       {
         id: 'm6',
-        senderRole: 'shopOwner',
-        type: 'shop-schedule-review',
+        senderRole: 'partner',
+        type: 'partner-schedule-review',
         content: '가능한 일정을 선택해 예약 요청을 보냅니다.',
         minutesAgo: 11,
         desiredScheduleOptions: [
@@ -132,7 +132,7 @@ export const mockShopConsultations: ShopConsultation[] = [
     messages: [
       {
         id: 'm1',
-        senderRole: 'shopOwner',
+        senderRole: 'partner',
         type: 'text',
         content: '안녕하세요! 네일샵 러블리입니다. 상담 이어가볼게요.',
         minutesAgo: 240,
@@ -150,14 +150,14 @@ export const mockShopConsultations: ShopConsultation[] = [
       },
       {
         id: 'm3',
-        senderRole: 'shopOwner',
+        senderRole: 'partner',
         type: 'text',
         content: '4월 27일 11시 일정으로 가능해요. 아래 요청에서 예약을 확정해주세요.',
         minutesAgo: 80,
       },
       {
         id: 'm4',
-        senderRole: 'shopOwner',
+        senderRole: 'partner',
         type: 'booking-request',
         content: '예약 확정 요청을 보냈습니다.',
         minutesAgo: 79,
@@ -197,7 +197,7 @@ export const mockShopConsultations: ShopConsultation[] = [
     messages: [
       {
         id: 'm1',
-        senderRole: 'shopOwner',
+        senderRole: 'partner',
         type: 'text',
         content: '안녕하세요! 호텔 더 스카이입니다. 예약 일정 확인 도와드릴게요.',
         minutesAgo: 480,
@@ -212,7 +212,7 @@ export const mockShopConsultations: ShopConsultation[] = [
       },
       {
         id: 'm3',
-        senderRole: 'shopOwner',
+        senderRole: 'partner',
         type: 'booking-request',
         content: '예약 확정 요청을 보냈습니다.',
         minutesAgo: 390,
@@ -231,7 +231,7 @@ export const mockShopConsultations: ShopConsultation[] = [
       },
       {
         id: 'm5',
-        senderRole: 'shopOwner',
+        senderRole: 'partner',
         type: 'text',
         content: '결제 확인됐습니다. 방문 전날 체크인 안내 메시지 드릴게요.',
         minutesAgo: 370,
@@ -255,7 +255,7 @@ export const mockShopConsultations: ShopConsultation[] = [
     messages: [
       {
         id: 'm1',
-        senderRole: 'shopOwner',
+        senderRole: 'partner',
         type: 'text',
         content: '안녕하세요! 아이래쉬 스튜디오입니다. 시술 가능 여부 먼저 확인할게요.',
         minutesAgo: 45,
@@ -271,8 +271,8 @@ export const mockShopConsultations: ShopConsultation[] = [
   },
 ];
 
-export function getShopConsultationByMatchingId(matchingId: string) {
-  return mockShopConsultations.find((item) => item.matchingId === matchingId);
+export function getPartnerConsultationByMatchingId(matchingId: string) {
+  return mockPartnerConsultations.find((item) => item.matchingId === matchingId);
 }
 
 export function formatConsultationUpdatedText(updatedAt: string) {

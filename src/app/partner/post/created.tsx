@@ -3,7 +3,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function ShopPostCreatedScreen() {
+export default function PartnerPostCreatedScreen() {
   const params = useLocalSearchParams<{
     category?: string;
     shopName?: string;
@@ -43,16 +43,16 @@ export default function ShopPostCreatedScreen() {
         <View style={styles.buttonGroup}>
           <Pressable
             accessibilityRole="button"
-            onPress={() => router.replace('/shop' as never)}
+            onPress={() => router.replace('/partner' as never)}
             style={styles.primaryButton}>
-            <Text style={styles.primaryButtonText}>샵 상담 목록으로 이동</Text>
+            <Text style={styles.primaryButtonText}>파트너 상담 목록으로 이동</Text>
           </Pressable>
 
           <Pressable
             accessibilityRole="button"
-            onPress={() => router.replace('/shop/post/new' as never)}
+            onPress={() => router.replace('/partner/post/new' as never)}
             style={styles.secondaryButton}>
-            <Text style={styles.secondaryButtonText}>새 공고 다시 등록</Text>
+              <Text style={styles.secondaryButtonText}>새 공고 다시 등록</Text>
           </Pressable>
         </View>
       </View>

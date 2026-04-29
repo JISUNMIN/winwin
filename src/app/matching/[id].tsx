@@ -158,9 +158,9 @@ export default function MatchingDetailScreen() {
       <View style={styles.bottomBar}>
         <Pressable
           accessibilityRole="button"
-          onPress={() => router.push('/shop' as Href)}
+          onPress={() => router.push('/partner' as Href)}
           style={styles.secondaryActionButton}>
-          <Text style={styles.secondaryActionButtonText}>샵 상담 목록</Text>
+          <Text style={styles.secondaryActionButtonText}>파트너 상담 목록</Text>
         </Pressable>
 
         <Pressable

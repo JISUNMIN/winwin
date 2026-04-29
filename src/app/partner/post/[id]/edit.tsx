@@ -2,9 +2,10 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Text, View } from 'react-native';
 
 import { ShopPostForm } from '@/components/winwin/ShopPostForm';
+import { setPostFeedbackMessage } from '@/data/post-feedback';
 import { getPostedMatchingById, updatePostedMatching } from '@/data/matchings';
 
-export default function ShopPostEditScreen() {
+export default function PartnerPostEditScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
   const matching = params.id ? getPostedMatchingById(params.id) : null;
 
@@ -22,7 +23,7 @@ export default function ShopPostEditScreen() {
           수정할 공고를 찾지 못했어요
         </Text>
         <Text
-          onPress={() => router.replace('/shop/post' as never)}
+          onPress={() => router.replace('/partner/post' as never)}
           style={{ marginTop: 12, color: '#6D5DFB', fontSize: 14, fontWeight: '900' }}>
           공고 관리로 돌아가기
         </Text>
@@ -37,7 +38,8 @@ export default function ShopPostEditScreen() {
       onBack={() => router.back()}
       onSubmit={(draft) => {
         updatePostedMatching(params.id!, draft);
-        router.replace('/shop/post' as never);
+        setPostFeedbackMessage('공고 수정이 완료됐어요.');
+        router.replace('/partner/post' as never);
       }}
     />
   );

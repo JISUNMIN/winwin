@@ -7,15 +7,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CategoryFilter } from '@/components/winwin/CategoryFilter';
 import { MatchingCard } from '@/components/winwin/MatchingCard';
-import { getAllMatchings } from '@/data/matchings';
+import { getDiscoverableMatchings } from '@/data/matchings';
 import type { Category } from '@/data/matchings';
+import { formatFullLocationText } from '@/utils/location-text';
 
 export default function HomeScreen() {
   const router = useRouter();
   const isFocused = useIsFocused();
+  const [searchInput, setSearchInput] = useState('');
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<Category>('all');
-  const [matchings, setMatchings] = useState(() => getAllMatchings());
+  const [matchings, setMatchings] = useState(() => getDiscoverableMatchings());
   const [currentLocation, setCurrentLocation] = useState('위치를 확인해보세요');
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
@@ -45,22 +47,11 @@ export default function HomeScreen() {
       const firstAddress = address[0];
 
       if (firstAddress) {
-        const district = firstAddress.district ?? firstAddress.subregion;
-        const neighborhood =
-          firstAddress.street ??
-          firstAddress.name ??
-          firstAddress.city ??
-          '현재 위치';
-
-        setCurrentLocation(
-          district ? `${district} ${neighborhood}` : neighborhood,
-        );
+        setCurrentLocation(formatFullLocationText(firstAddress, '현재 위치를 확인했어요'));
         return;
       }
 
-      setCurrentLocation(
-        `위도 ${position.coords.latitude.toFixed(3)}, 경도 ${position.coords.longitude.toFixed(3)}`,
-      );
+      setCurrentLocation('주소를 확인하지 못했어요. 다시 시도해 주세요.');
     } catch {
       setLocationError('현재 위치를 가져오지 못했어요.');
       setCurrentLocation('위치를 다시 확인해주세요');
@@ -75,9 +66,13 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (isFocused) {
-      setMatchings(getAllMatchings());
+      setMatchings(getDiscoverableMatchings());
     }
   }, [isFocused]);
+
+  const handleApplySearch = () => {
+    setQuery(searchInput.trim());
+  };
 
   const filteredMatchings = useMemo(() => {
     const keyword = query.trim().toLowerCase();
@@ -122,13 +117,20 @@ export default function HomeScreen() {
         <View style={styles.searchBox}>
           <Text style={styles.searchLabel}>검색</Text>
           <TextInput
-            value={query}
-            onChangeText={setQuery}
+            value={searchInput}
+            onChangeText={setSearchInput}
             placeholder="지역, 서비스, 조건으로 검색하세요"
             placeholderTextColor="#8A8F98"
             style={styles.searchInput}
             returnKeyType="search"
+            onSubmitEditing={handleApplySearch}
           />
+          <Pressable
+            accessibilityRole="button"
+            onPress={handleApplySearch}
+            style={styles.searchButton}>
+            <Text style={styles.searchButtonText}>검색</Text>
+          </Pressable>
         </View>
 
         <View style={styles.locationBox}>
@@ -246,12 +248,26 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   searchInput: {
+    flex: 1,
     minHeight: 42,
     borderRadius: 10,
     backgroundColor: '#F1F3F6',
     color: '#15181D',
     fontSize: 15,
     paddingHorizontal: 12,
+  },
+  searchButton: {
+    marginTop: 10,
+    minHeight: 42,
+    borderRadius: 10,
+    backgroundColor: '#15181D',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  searchButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
   },
   locationBox: {
     marginTop: 14,

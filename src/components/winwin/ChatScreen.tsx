@@ -27,10 +27,10 @@ import { ShopChatActionBar } from '@/components/winwin/ShopChatActionBar';
 import { ShopChatHeaderActions } from '@/components/winwin/ShopChatHeaderActions';
 import { ShopChatStatusCard } from '@/components/winwin/ShopChatStatusCard';
 import { ShopScheduleReviewCard } from '@/components/winwin/ShopScheduleReviewCard';
-import { getShopConsultationByMatchingId } from '@/data/consultations';
+import { getPartnerConsultationByMatchingId } from '@/data/consultations';
 import { getAllMatchings } from '@/data/matchings';
 
-export type ViewerRole = 'customer' | 'shopOwner';
+export type ViewerRole = 'customer' | 'partner';
 
 type Message = {
   id: string;
@@ -39,7 +39,7 @@ type Message = {
     | 'text'
     | 'image'
     | 'desired-schedule'
-    | 'shop-schedule-review'
+    | 'partner-schedule-review'
     | 'booking-request';
   content: string;
   timestamp: Date;
@@ -69,7 +69,7 @@ function createDefaultMessages(shopName: string): Message[] {
   return [
     {
       id: '1',
-      senderRole: 'shopOwner',
+      senderRole: 'partner',
       type: 'text',
       content: `안녕하세요! ${shopName}입니다. 지원해주셔서 감사합니다.`,
       timestamp: new Date(Date.now() - 3600000),
@@ -83,7 +83,7 @@ function createDefaultMessages(shopName: string): Message[] {
     },
     {
       id: '3',
-      senderRole: 'shopOwner',
+      senderRole: 'partner',
       type: 'text',
       content: '상담을 위해 현재 상태와 가능한 방문 시간을 알려주세요.',
       timestamp: new Date(Date.now() - 3500000),
@@ -112,7 +112,7 @@ export function ChatScreen({
 }: ChatScreenProps) {
   const { id } = useLocalSearchParams<{ id: string }>();
   const matching = getAllMatchings().find((item) => item.id === id);
-  const consultation = id ? getShopConsultationByMatchingId(id) : undefined;
+  const consultation = id ? getPartnerConsultationByMatchingId(id) : undefined;
   const scrollRef = useRef<ScrollView>(null);
   const messageOffsetsRef = useRef<Record<string, number>>({});
   const [viewerRole, setViewerRole] = useState<ViewerRole>(initialViewerRole);
@@ -222,7 +222,7 @@ export function ChatScreen({
     setTimeout(() => {
       const replyMessage: Message = {
         id: String(Date.now() + 1),
-        senderRole: viewerRole === 'customer' ? 'shopOwner' : 'customer',
+        senderRole: viewerRole === 'customer' ? 'partner' : 'customer',
         type: 'text',
         content:
           viewerRole === 'customer'
@@ -273,7 +273,7 @@ export function ChatScreen({
     setTimeout(() => {
       const replyMessage: Message = {
         id: String(Date.now() + 1),
-        senderRole: viewerRole === 'customer' ? 'shopOwner' : 'customer',
+        senderRole: viewerRole === 'customer' ? 'partner' : 'customer',
         type: 'text',
         content:
           viewerRole === 'customer'
@@ -312,7 +312,7 @@ export function ChatScreen({
       const replyTime = Date.now();
       const shopReply: Message = {
         id: String(replyTime),
-        senderRole: 'shopOwner',
+        senderRole: 'partner',
         type: 'text',
         content:
           options.length > 1
@@ -322,8 +322,8 @@ export function ChatScreen({
       };
       const shopScheduleReviewMessage: Message = {
         id: String(replyTime + 1),
-        senderRole: 'shopOwner',
-        type: 'shop-schedule-review',
+        senderRole: 'partner',
+        type: 'partner-schedule-review',
         content: '가능한 일정을 선택해 예약 요청을 보냅니다.',
         timestamp: new Date(replyTime + 1),
         desiredScheduleOptions: options,
@@ -355,14 +355,14 @@ export function ChatScreen({
         ...nextMessages,
         {
           id: String(replyTime),
-          senderRole: 'shopOwner',
+          senderRole: 'partner',
           type: 'text',
           content: `${selectedOption.time} 일정으로 가능해요. 아래 요청에서 예약을 확정해주세요.`,
           timestamp: new Date(replyTime),
         },
         {
           id: String(replyTime + 1),
-          senderRole: 'shopOwner',
+          senderRole: 'partner',
           type: 'booking-request',
           content: '예약 확정 요청을 보냈습니다.',
           timestamp: new Date(replyTime + 1),
@@ -416,10 +416,10 @@ export function ChatScreen({
   };
 
   const isCustomerViewer = viewerRole === 'customer';
-  const modeLabel = isCustomerViewer ? '고객 보기' : '샵 보기';
+  const modeLabel = isCustomerViewer ? '고객 보기' : '파트너 보기';
   const modeDescription = isCustomerViewer
     ? '고객 기준으로 메시지와 예약 액션을 보여주고 있어요.'
-    : '샵 기준으로 메시지와 일정 선택 액션을 보여주고 있어요.';
+    : '파트너 기준으로 메시지와 일정 선택 액션을 보여주고 있어요.';
   const customerMessageCount = messages.filter(
     (message) => message.senderRole === 'customer',
   ).length;
@@ -510,14 +510,14 @@ export function ChatScreen({
 
               <Pressable
                 accessibilityRole="button"
-                onPress={() => setViewerRole('shopOwner')}
+                onPress={() => setViewerRole('partner')}
                 style={[styles.roleButton, !isCustomerViewer && styles.roleButtonActive]}>
                 <Text
                   style={[
                     styles.roleButtonText,
                     !isCustomerViewer && styles.roleButtonTextActive,
                   ]}>
-                  샵
+                  파트너
                 </Text>
               </Pressable>
             </View>
@@ -590,7 +590,7 @@ export function ChatScreen({
                       {formatMessageTime(message.timestamp)}
                     </Text>
                   </View>
-                ) : message.type === 'shop-schedule-review' &&
+                ) : message.type === 'partner-schedule-review' &&
                   message.desiredScheduleOptions ? (
                   <View style={styles.cardMessage}>
                     <ShopScheduleReviewCard
@@ -639,7 +639,7 @@ export function ChatScreen({
             value={inputMessage}
             onChangeText={setInputMessage}
             placeholder={
-              isCustomerViewer ? '고객 메시지를 입력하세요' : '샵 메시지를 입력하세요'
+              isCustomerViewer ? '고객 메시지를 입력하세요' : '파트너 메시지를 입력하세요'
             }
             placeholderTextColor="#8A8F98"
             style={styles.input}

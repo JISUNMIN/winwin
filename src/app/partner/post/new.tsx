@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { ShopPostForm } from '@/components/winwin/ShopPostForm';
 import { addPostedMatching, categoryLabels } from '@/data/matchings';
 
-export default function ShopPostNewScreen() {
+export default function PartnerPostNewScreen() {
   return (
     <ShopPostForm
       mode="create"
@@ -12,7 +12,7 @@ export default function ShopPostNewScreen() {
         addPostedMatching(draft);
 
         router.push({
-          pathname: '/shop/post/created',
+          pathname: '/partner/post/created',
           params: {
             category: categoryLabels[draft.category],
             shopName: draft.shopName,

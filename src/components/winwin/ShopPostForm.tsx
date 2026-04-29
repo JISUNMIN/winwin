@@ -19,6 +19,7 @@ import {
   type MatchingCategory,
   type MatchingPostDraft,
 } from '@/data/matchings';
+import { formatFullLocationText, formatPublicLocationText } from '@/utils/location-text';
 
 const categoryOptions = Object.entries(categoryLabels) as [MatchingCategory, string][];
 const requirementSuggestions = ['리뷰 필수', '평일 가능', '노쇼 금지', '사진 촬영 가능'];
@@ -32,28 +33,11 @@ type ShopPostFormProps = {
   onSubmit: (draft: MatchingPostDraft) => void;
 };
 
-function formatCoordinateText(coordinates: MatchingCoordinates) {
-  return `${coordinates.latitude.toFixed(5)}, ${coordinates.longitude.toFixed(5)}`;
-}
-
-function joinAddressParts(parts: Array<string | null | undefined>) {
-  return parts
-    .filter((part): part is string => Boolean(part && part.trim()))
-    .join(' ');
-}
-
 function buildPublicLocationLabel(
   address: Location.LocationGeocodedAddress | null | undefined,
   fallback: string,
 ) {
-  const label = joinAddressParts([
-    address?.region,
-    address?.city,
-    address?.district,
-    address?.subregion,
-  ]);
-
-  return label || fallback.trim();
+  return formatPublicLocationText(address, fallback);
 }
 
 function buildSummaryLocationFromDetail(detailAddress: string) {
@@ -65,21 +49,22 @@ function buildSummaryLocationFromDetail(detailAddress: string) {
   return tokens.slice(0, 3).join(' ') || detailAddress.trim();
 }
 
+function buildCombinedDetailLocation(baseAddress: string, extraDetail: string) {
+  const normalizedBase = baseAddress.trim();
+  const normalizedExtra = extraDetail.trim();
+
+  if (!normalizedExtra) {
+    return normalizedBase;
+  }
+
+  return `${normalizedBase}, ${normalizedExtra}`;
+}
+
 function buildDetailLocationLabel(
   address: Location.LocationGeocodedAddress | null | undefined,
   fallback: string,
 ) {
-  const label = joinAddressParts([
-    address?.region,
-    address?.city,
-    address?.district,
-    address?.subregion,
-    address?.street,
-    address?.streetNumber,
-    address?.name,
-  ]);
-
-  return label || fallback.trim();
+  return formatFullLocationText(address, fallback.trim());
 }
 
 function getDateOnly(date: Date) {
@@ -132,7 +117,10 @@ export function ShopPostForm({
   );
   const [shopName, setShopName] = useState(initialMatching?.shopName ?? '');
   const [service, setService] = useState(initialMatching?.service ?? '');
-  const [detailLocation, setDetailLocation] = useState(initialMatching?.locationDetail ?? '');
+  const [baseLocation, setBaseLocation] = useState(
+    initialMatching?.locationDetail ?? initialMatching?.location ?? '',
+  );
+  const [detailLocationExtra, setDetailLocationExtra] = useState('');
   const [detailLocationCoordinates, setDetailLocationCoordinates] = useState<MatchingCoordinates | null>(
     initialMatching?.locationDetailCoordinates ?? initialMatching?.locationCoordinates ?? null,
   );
@@ -165,17 +153,10 @@ export function ShopPostForm({
   const isValid =
     shopName.trim().length > 0 &&
     service.trim().length > 0 &&
-    detailLocation.trim().length > 0 &&
+    baseLocation.trim().length > 0 &&
     detailLocationCoordinates !== null &&
     requirements.length > 0 &&
     selectedDates.length > 0;
-
-  const handleDetailLocationChange = (value: string) => {
-    setDetailLocation(value);
-    setDetailLocationCoordinates(null);
-    setDetailLocationState('idle');
-    setDetailLocationFeedback('');
-  };
 
   const handleAddRequirement = (value: string) => {
     const trimmedValue = value.trim();
@@ -200,54 +181,10 @@ export function ShopPostForm({
     );
   };
 
-  const verifyLocation = async () => {
-    const query = detailLocation.trim();
-
-    if (!query) {
-      setDetailLocationState('error');
-      setDetailLocationFeedback('먼저 상세 위치를 입력해 주세요.');
-      return;
-    }
-
-    setDetailLocationState('loading');
-    setDetailLocationFeedback('정확한 위치를 확인하고 있어요...');
-
-    try {
-      const geocoded = await Location.geocodeAsync(query);
-      const firstResult = geocoded[0];
-
-      if (!firstResult) {
-        setDetailLocationCoordinates(null);
-        setDetailLocationState('error');
-        setDetailLocationFeedback('상세 주소를 찾지 못했어요. 도로명이나 건물 정보를 더 적어주세요.');
-        return;
-      }
-
-      const coordinates = {
-        latitude: firstResult.latitude,
-        longitude: firstResult.longitude,
-      };
-      const reverseResults = await Location.reverseGeocodeAsync(coordinates);
-      const reverseAddress = reverseResults[0];
-      const normalizedLocation = buildDetailLocationLabel(reverseAddress, query);
-      const publicSummary = buildPublicLocationLabel(reverseAddress, normalizedLocation);
-      const fallbackSummary = buildSummaryLocationFromDetail(normalizedLocation);
-
-      setDetailLocation(normalizedLocation);
-      setDetailLocationCoordinates(coordinates);
-      setDetailLocationState('verified');
-      setDetailLocationFeedback(
-        `확인 완료 · 공개 위치 ${publicSummary || fallbackSummary} · 좌표 ${formatCoordinateText(coordinates)}`,
-      );
-    } catch (error) {
-      setDetailLocationCoordinates(null);
-      setDetailLocationState('error');
-      setDetailLocationFeedback('위치 확인 중 문제가 생겼어요. 잠시 후 다시 시도해 주세요.');
-    }
-  };
-
   const importCurrentLocation = async () => {
     setIsImportingCurrentLocation(true);
+    setDetailLocationState('loading');
+    setDetailLocationFeedback('현재 위치에서 주소를 불러오고 있어요...');
 
     try {
       const permission = await Location.requestForegroundPermissionsAsync();
@@ -267,22 +204,28 @@ export function ShopPostForm({
       };
       const reverseResults = await Location.reverseGeocodeAsync(coordinates);
       const reverseAddress = reverseResults[0];
-      const nextDetailLocation = buildDetailLocationLabel(reverseAddress, detailLocation);
+      const nextDetailLocation = buildDetailLocationLabel(reverseAddress, '현재 위치 주소');
 
       if (nextDetailLocation) {
         const publicSummary = buildPublicLocationLabel(reverseAddress, nextDetailLocation);
         const fallbackSummary = buildSummaryLocationFromDetail(nextDetailLocation);
 
-        setDetailLocation(nextDetailLocation);
+        setBaseLocation(nextDetailLocation);
         setDetailLocationCoordinates(coordinates);
         setDetailLocationState('verified');
         setDetailLocationFeedback(
-          `현재 위치 반영 완료 · 공개 위치 ${publicSummary || fallbackSummary} · 좌표 ${formatCoordinateText(coordinates)}`,
+          `현재 위치 반영 완료 · 공개 위치 ${publicSummary || fallbackSummary} · 상세 위치 ${nextDetailLocation}`,
         );
+        return;
       }
-    } catch (error) {
+
+      setDetailLocationCoordinates(null);
       setDetailLocationState('error');
-      setDetailLocationFeedback('현재 위치를 가져오지 못했어요. 주소를 직접 입력해 주세요.');
+      setDetailLocationFeedback('현재 위치 주소를 읽지 못했어요. 잠시 후 다시 시도해 주세요.');
+    } catch (error) {
+      setDetailLocationCoordinates(null);
+      setDetailLocationState('error');
+      setDetailLocationFeedback('현재 위치를 가져오지 못했어요. 잠시 후 다시 시도해 주세요.');
     } finally {
       setIsImportingCurrentLocation(false);
     }
@@ -293,10 +236,10 @@ export function ShopPostForm({
       return;
     }
 
-    const normalizedDetailLocation = detailLocation.trim();
+    const normalizedDetailLocation = buildCombinedDetailLocation(baseLocation, detailLocationExtra);
     const derivedPublicLocation =
       locationVisibility === 'summary-only'
-        ? buildSummaryLocationFromDetail(normalizedDetailLocation)
+        ? buildSummaryLocationFromDetail(baseLocation)
         : normalizedDetailLocation;
 
     onSubmit({
@@ -412,27 +355,13 @@ export function ShopPostForm({
             </Pressable>
           </View>
 
-          <Text style={styles.inputLabel}>상세 위치</Text>
-          <TextInput
-            value={detailLocation}
-            onChangeText={handleDetailLocationChange}
-            placeholder="예: 경기도 수원시 영통구 ○○로 12, 3층"
-            placeholderTextColor="#8A8F98"
-            style={styles.input}
-          />
+          <Text style={styles.inputLabel}>기본 주소</Text>
+          <View style={styles.locationPreviewBox}>
+            <Text style={styles.locationPreviewText}>
+              {baseLocation || '아직 불러온 주소가 없어요'}
+            </Text>
+          </View>
           <View style={styles.inlineInputRow}>
-            <Pressable
-              accessibilityRole="button"
-              onPress={verifyLocation}
-              style={[
-                styles.secondaryActionButton,
-                detailLocationState === 'loading' && styles.secondaryActionButtonDisabled,
-              ]}>
-              <Text style={styles.secondaryActionButtonText}>
-                {detailLocationState === 'loading' ? '확인 중...' : '상세 위치 확인'}
-              </Text>
-            </Pressable>
-
             <Pressable
               accessibilityRole="button"
               onPress={importCurrentLocation}
@@ -446,7 +375,7 @@ export function ShopPostForm({
             </Pressable>
           </View>
           <Text style={styles.inputHint}>
-            예약 후 안내를 선택하면 목록에는 `경기도 수원시 영통구`처럼 지역까지만 자동 노출됩니다.
+            큰 주소는 현재 위치로 불러오고, 아래에는 필요할 때만 `1층 102호` 같은 상세 안내를 적어주세요.
           </Text>
           {detailLocationFeedback ? (
             <Text
@@ -461,6 +390,18 @@ export function ShopPostForm({
               {detailLocationFeedback}
             </Text>
           ) : null}
+
+          <Text style={styles.inputLabel}>추가 상세주소</Text>
+          <TextInput
+            value={detailLocationExtra}
+            onChangeText={setDetailLocationExtra}
+            placeholder="예: 1층 102호, 뒷문 옆"
+            placeholderTextColor="#8A8F98"
+            style={styles.input}
+          />
+          <Text style={styles.inputHint}>
+            상세주소는 선택 입력입니다. 예약 후 안내가 필요하면 비워둬도 됩니다.
+          </Text>
 
           <Text style={styles.inputLabel}>상세 설명</Text>
           <TextInput
@@ -745,6 +686,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     paddingHorizontal: 12,
     paddingVertical: 12,
+  },
+  locationPreviewBox: {
+    marginTop: 8,
+    minHeight: 44,
+    borderRadius: 12,
+    backgroundColor: '#F1F3F6',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    justifyContent: 'center',
+  },
+  locationPreviewText: {
+    color: '#15181D',
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '700',
   },
   multilineInput: {
     minHeight: 88,
