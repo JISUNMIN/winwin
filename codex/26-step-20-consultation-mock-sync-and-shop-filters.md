@@ -85,6 +85,28 @@ src/app/shop/index.tsx
 - 역할별 흐름도 더 자연스럽고
 - 이후 서버 데이터 구조를 붙일 때도 방향이 더 명확해집니다
 
+## React 개발자 기준으로 보면
+
+- 이 단계는 흩어져 있던 mock 상태를 하나의 데이터 파일로 모으는 작업입니다.
+- 웹 React에서도 여러 페이지가 같은 임시 데이터를 따로 들고 있으면 어긋나기 쉬운데, `consultations.ts` 같은 shared module로 빼면 훨씬 안정적입니다.
+- 상태 필터는 웹의 리스트 필터 버튼과 동일한 패턴이고, 선택된 필터에 따라 렌더링할 배열만 바뀝니다.
+
+## 핵심 로직
+
+- `src/data/consultations.ts`에 상담 상태, 메시지, unread 수, updatedAt을 한 곳에 모아뒀습니다.
+- 샵 목록은 이 데이터를 필터링해서 보여주고, 채팅 화면도 같은 데이터를 초기 상태로 사용합니다.
+- 그래서 한 상담이 `결제대기`인지 `확정`인지 같은 정보가 목록과 채팅에서 같은 기준으로 보이게 됩니다.
+
+## 핵심 코드
+
+```ts
+const filteredConsultationItems = consultationItems.filter((item) =>
+  selectedFilter === 'all' ? true : item.statusTone === selectedFilter,
+);
+```
+
+선택된 필터 값에 따라 목록에서 보여줄 상담만 골라냅니다.
+
 ## 검증
 
 아래 명령으로 TypeScript 검사를 했습니다.

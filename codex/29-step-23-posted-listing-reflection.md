@@ -72,6 +72,30 @@ src/app/shop/post/new.tsx
 
 이건 나중에 실제 서버 저장을 붙일 때도 매우 좋은 중간 단계입니다.
 
+## React 개발자 기준으로 보면
+
+- 이 단계는 컴포넌트 로컬 state가 아니라, 여러 화면에서 같이 읽는 module-level mock store를 만든 것입니다.
+- 웹 React에서도 `posts.ts` 파일에 배열과 helper 함수를 두고 여러 페이지가 import해서 쓰면 비슷하게 동작합니다.
+- `useState`와 달리 컴포넌트 밖에 있는 값이라서, 같은 앱 실행 중 라우트 이동을 해도 유지됩니다.
+
+## 핵심 로직
+
+- `addPostedMatching(...)`이 새 공고를 `userPostedMatchings` 배열에 추가합니다.
+- `getAllMatchings()`는 기본 mock 공고와 새로 등록한 공고를 합쳐서 반환합니다.
+- 홈, 상세, 채팅, 샵 화면이 이 helper를 사용하도록 바뀌면서 새 공고가 여러 화면에 함께 나타나게 됐습니다.
+
+## 핵심 코드
+
+```ts
+const userPostedMatchings: Matching[] = [];
+
+export function addPostedMatching(draft: MatchingPostDraft) {
+  userPostedMatchings.unshift(newMatching);
+}
+```
+
+새 공고를 컴포넌트 state가 아니라 파일 바깥의 module-level 배열에 넣어서 여러 화면이 같이 읽게 했습니다.
+
 ## 검증
 
 아래 명령으로 TypeScript 검사를 했습니다.

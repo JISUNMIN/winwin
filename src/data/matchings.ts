@@ -7,6 +7,8 @@ export interface MatchingCoordinates {
   longitude: number;
 }
 
+export type MatchingPostStatus = 'open' | 'closed';
+
 export interface Matching {
   id: string;
   category: MatchingCategory;
@@ -25,6 +27,7 @@ export interface Matching {
   description?: string;
   portfolio?: string[];
   deposit?: number;
+  postStatus?: MatchingPostStatus;
 }
 
 export type MatchingPostDraft = {
@@ -227,6 +230,7 @@ export function addPostedMatching(draft: MatchingPostDraft) {
     availableDates: draft.availableDates,
     description: draft.description,
     deposit: draft.deposit,
+    postStatus: 'open',
   };
 
   userPostedMatchings.unshift(newMatching);
@@ -235,4 +239,43 @@ export function addPostedMatching(draft: MatchingPostDraft) {
 
 export function getPostedMatchings() {
   return [...userPostedMatchings];
+}
+
+export function getPostedMatchingById(id: string) {
+  return userPostedMatchings.find((matching) => matching.id === id) ?? null;
+}
+
+export function updatePostedMatchingStatus(id: string, status: MatchingPostStatus) {
+  const target = userPostedMatchings.find((matching) => matching.id === id);
+
+  if (!target) {
+    return null;
+  }
+
+  target.postStatus = status;
+  return target;
+}
+
+export function updatePostedMatching(id: string, draft: MatchingPostDraft) {
+  const target = userPostedMatchings.find((matching) => matching.id === id);
+
+  if (!target) {
+    return null;
+  }
+
+  target.category = draft.category;
+  target.shopName = draft.shopName;
+  target.location = draft.location;
+  target.locationCoordinates = draft.locationCoordinates;
+  target.locationDetail = draft.locationDetail;
+  target.locationDetailCoordinates = draft.locationDetailCoordinates;
+  target.locationVisibility = draft.locationVisibility;
+  target.service = draft.service;
+  target.requirements = [...draft.requirements];
+  target.availableDates = [...draft.availableDates];
+  target.deadline = draft.availableDates[0] ?? target.deadline;
+  target.description = draft.description;
+  target.deposit = draft.deposit;
+
+  return target;
 }

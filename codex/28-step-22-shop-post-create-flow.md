@@ -93,6 +93,32 @@ src/app/shop/index.tsx
 
 의 가장 기본 뼈대가 생겼습니다.
 
+## React 개발자 기준으로 보면
+
+- 웹의 `create post` 폼 페이지와 완료 페이지를 라우트 두 개로 나눈 구조와 같습니다.
+- RN의 `TextInput`은 웹의 `input`/`textarea` 역할을 하고, `Pressable`은 제출 버튼 역할을 합니다.
+- `router.push(...)`로 등록 완료 화면으로 넘어가는 흐름은 React Router의 navigate와 거의 같은 개념입니다.
+
+## 핵심 로직
+
+- `/shop/post/new`는 입력값을 `useState`로 관리하는 폼 화면입니다.
+- 등록 버튼을 누르면 요약값을 params로 넘기면서 `/shop/post/created`로 이동합니다.
+- 즉, 이 단계에서는 아직 영구 저장보다 "등록 화면 -> 완료 화면" 흐름을 먼저 만드는 데 집중했습니다.
+
+## 핵심 코드
+
+```ts
+router.push({
+  pathname: '/shop/post/created',
+  params: {
+    shopName: shopName.trim(),
+    service: service.trim(),
+  },
+});
+```
+
+등록 완료 화면은 서버에서 다시 읽는 대신, 먼저 라우터 params로 요약값을 넘겨받아 표시했습니다.
+
 ## 검증
 
 아래 명령으로 TypeScript 검사를 했습니다.

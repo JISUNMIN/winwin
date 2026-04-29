@@ -59,6 +59,28 @@ npx.cmd expo install expo-location
 
 즉, 이제 메인 화면의 위치 영역이 단순 텍스트가 아니라 실제 상태가 있는 UI가 됐습니다.
 
+## React 개발자 기준으로 보면
+
+- 이건 웹에서 `navigator.geolocation`으로 위치를 받아오는 컴포넌트를 만든 것과 비슷합니다.
+- RN에서는 브라우저 API 대신 `expo-location` 패키지를 사용합니다.
+- 로딩/성공/실패 상태를 `useState`로 들고 있고, 버튼을 누르면 다시 비동기 요청을 실행하는 전형적인 React 패턴입니다.
+
+## 핵심 로직
+
+- `handleFetchLocation()`이 위치 권한 요청, 현재 좌표 조회, reverse geocode를 순서대로 처리합니다.
+- 성공하면 위치 문자열 상태를 업데이트하고, 실패하면 에러 상태를 업데이트합니다.
+- 화면은 이 상태값에 따라 로딩 인디케이터, 위치 텍스트, 에러 문구를 조건부 렌더링합니다.
+
+## 핵심 코드
+
+```ts
+const permission = await Location.requestForegroundPermissionsAsync();
+const position = await Location.getCurrentPositionAsync();
+const addresses = await Location.reverseGeocodeAsync(position.coords);
+```
+
+브라우저 geolocation 대신 `expo-location`으로 권한 요청, 좌표 조회, 주소 변환을 순서대로 처리합니다.
+
 ## 검증
 
 아래 명령으로 TypeScript 검사를 했습니다.

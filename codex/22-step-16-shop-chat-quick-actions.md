@@ -51,6 +51,30 @@ src/components/winwin/ChatScreen.tsx
 
 빠른 이동 버튼은 이런 반복 확인을 줄여주는 작은 관리자 UX 개선입니다.
 
+## React 개발자 기준으로 보면
+
+- 상단 액션 바는 웹의 `sticky` 도구 버튼이나 "섹션으로 점프" 버튼과 비슷한 역할입니다.
+- RN의 `Pressable`은 웹의 `button`에 가장 가깝고, 눌림 인터랙션을 처리하는 기본 컴포넌트입니다.
+- RN의 `ScrollView`는 웹의 스크롤 가능한 `div`와 비슷하지만, DOM API 대신 ref 메서드로 스크롤을 제어합니다.
+
+## 핵심 로직
+
+- 각 메시지 카드가 렌더링될 때 `onLayout`으로 자기 자신의 y 좌표를 부모 쪽에 알려줍니다.
+- 상단 버튼은 그 저장된 좌표를 읽어서 `ScrollView.scrollTo(...)`를 호출합니다.
+- 웹 React에서 `ref + scrollTo`로 특정 섹션으로 이동시키는 패턴과 비슷합니다.
+
+## 핵심 코드
+
+```ts
+onLayout={(event) => {
+  desiredScheduleY.current = event.nativeEvent.layout.y;
+}}
+
+scrollViewRef.current?.scrollTo({ y: desiredScheduleY.current, animated: true });
+```
+
+메시지 위치를 저장해뒀다가, 버튼 클릭 시 그 좌표로 바로 스크롤합니다.
+
 ## 검증
 
 아래 명령으로 TypeScript 검사를 했습니다.

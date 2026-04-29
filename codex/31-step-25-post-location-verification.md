@@ -87,6 +87,30 @@ codex/progress-and-next-steps.md
 
 즉, 사용자에게는 지역만 먼저 보여주더라도 앱 내부에서는 정확한 좌표와 상세 주소를 같이 가지고 있을 수 있습니다.
 
+## React 개발자 기준으로 보면
+
+- 웹에서 주소 입력 후 geocoding API를 호출해 좌표를 받아오는 폼과 같은 개념입니다.
+- 차이는 브라우저 geolocation API 대신 RN에서는 `expo-location`을 쓰고, 주소 확인/현재 위치 불러오기를 같은 컴포넌트 state 안에서 관리한다는 점입니다.
+- 위치 문자열 하나만 저장하지 않고, 화면 표시용 텍스트와 좌표 데이터를 같이 관리하는 구조가 핵심입니다.
+
+## 핵심 로직
+
+- 상세 주소를 입력한 뒤 `상세 위치 확인`을 누르면 geocode와 reverse geocode를 순서대로 실행합니다.
+- 성공하면 주소 문자열을 정리하고 `locationCoordinates`, `locationDetailCoordinates`를 함께 저장합니다.
+- 공개 위치는 상세 주소에서 자동으로 파생해서, 노출용 텍스트와 내부 저장용 상세 주소를 분리합니다.
+
+## 핵심 코드
+
+```ts
+const geocoded = await Location.geocodeAsync(query);
+const coordinates = {
+  latitude: geocoded[0].latitude,
+  longitude: geocoded[0].longitude,
+};
+```
+
+입력한 상세 주소를 좌표로 바꾸는 핵심 부분입니다. 이 좌표를 이후 검색/정렬용 데이터로도 쓸 수 있게 저장합니다.
+
 ## 검증
 
 아래 명령으로 TypeScript 검사를 했습니다.

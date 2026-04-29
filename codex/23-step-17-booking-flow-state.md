@@ -78,6 +78,30 @@ type BookingFlowState = {
 
 같은 작업이 훨씬 쉬워집니다.
 
+## React 개발자 기준으로 보면
+
+- 이 단계는 "UI 데이터"와 "비즈니스 상태"를 분리한 단계입니다.
+- 웹 React에서도 `messages` 같은 렌더링 데이터와 `bookingStatus` 같은 도메인 상태를 분리하면 컴포넌트가 훨씬 읽기 쉬워집니다.
+- RN이라서 특별한 로직이 추가된 것이 아니라, 상태 설계를 더 명확하게 만든 것에 가깝습니다.
+
+## 핵심 로직
+
+- `ChatScreen` 안에서 `BookingFlowState`를 별도 상태로 관리합니다.
+- 고객이 희망 일정을 보내거나, 샵이 예약 요청을 보내거나, 결제를 완료할 때 이 상태가 단계별로 갱신됩니다.
+- `ShopChatStatusCard`는 이제 `messages` 배열을 직접 해석하지 않고, 정리된 예약 상태값을 props로 받아서 표시합니다.
+
+## 핵심 코드
+
+```ts
+type BookingFlowState = {
+  status: 'idle' | 'reviewing-schedules' | 'booking-request-sent' | 'payment-completed';
+  desiredScheduleCount: number;
+  selectedBooking: BookingData | null;
+};
+```
+
+예약 흐름을 메시지 배열 밖으로 빼서, 채팅 UI와 비즈니스 상태를 분리했습니다.
+
 ## 검증
 
 아래 명령으로 TypeScript 검사를 했습니다.

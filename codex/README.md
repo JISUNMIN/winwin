@@ -9,6 +9,14 @@ Git에는 올리지 않기 위해 `.gitignore`에 `codex/`를 추가했습니다
 - 코드를 바로 바꾸기 전에 먼저 설명합니다.
 - RN/Expo 개념, 폴더 역할, 실행 방법을 이곳에 Markdown으로 정리합니다.
 - 디자인 적용은 기본 예제를 띄워보고 구조를 이해한 뒤에 진행합니다.
+- Step 문서에는 React 개발자가 RN을 이해하기 쉬운 설명을 짧게 적습니다.
+  예: `View = div 비슷한 레이아웃 박스`, `Pressable = button 비슷한 인터랙션 컴포넌트`
+- Step 문서에는 핵심 로직을 2~4줄 정도로라도 적습니다.
+  예: 어떤 상태가 어디에 저장되는지, 어떤 함수가 화면을 갱신하는지
+- 구현 기록만 적지 않고, 왜 그렇게 동작하는지도 한 줄씩 설명합니다.
+- 설명 중에 실제 코드가 있으면 이해가 빨라지는 부분만 `핵심 코드`로 짧게 넣습니다.
+  예: 상태 선언, `filter(...)`, `map(...)`, `router.push(...)`, `geocodeAsync(...)`
+- 코드블록은 길게 붙이지 않고 3~8줄 정도만 넣고, 방금 설명한 흐름과 직접 연결되는 부분만 고릅니다.
 
 ## 현재 단계
 
@@ -49,6 +57,10 @@ Git에는 올리지 않기 위해 `.gitignore`에 `codex/`를 추가했습니다
 - [29. Step 23 등록 공고 목록 반영](./29-step-23-posted-listing-reflection.md)
 - [30. Step 24 공고 등록 구조화 입력](./30-step-24-post-form-structured-inputs.md)
 - [31. Step 25 공고 등록 위치 확인과 좌표 저장](./31-step-25-post-location-verification.md)
+- [32. Step 26 샵 공고 관리 목록](./32-step-26-shop-post-management-list.md)
+- [33. Step 27 공고 상태값과 관리 필터](./33-step-27-post-status-and-filters.md)
+- [34. Step 28 공고 수정 화면](./34-step-28-post-edit-screen.md)
+- [35. Step 29 공고 관리 목록 정렬](./35-step-29-post-sort-options.md)
 - [개발 중 저장, 새로고침, 재시작, 빌드 차이](./dev-server-refresh-build.md)
 - [진행 기록과 다음 할 일](./progress-and-next-steps.md)
 

@@ -99,6 +99,30 @@ src/data/matchings.ts
 
 으로 자연스럽게 확장할 수 있습니다.
 
+## React 개발자 기준으로 보면
+
+- 이 단계는 자유 입력 폼을 조금 더 구조화된 controlled UI로 바꾼 작업입니다.
+- 웹에서도 comma-separated input 대신 date picker, tag input, chip selector로 바꾸는 것과 같은 개선입니다.
+- RN에서는 기본 HTML input 타입이 풍부하지 않기 때문에, `Pressable + state` 조합으로 직접 UI를 만드는 경우가 많습니다.
+
+## 핵심 로직
+
+- 선택한 날짜들은 배열 상태로 들고 있고, 달력 셀을 누를 때마다 toggle 방식으로 추가/제거됩니다.
+- 지원 조건도 배열 상태로 들고 있으며, 입력값 추가나 추천 칩 클릭 시 배열에 추가하고 삭제 시 `filter`로 제거합니다.
+- 등록 가능 여부는 필수 상태값을 검사한 `isValid`로 한 번에 계산해서 버튼 비활성화에 사용합니다.
+
+## 핵심 코드
+
+```ts
+const toggleDate = (date: string) => {
+  setSelectedDates((current) =>
+    current.includes(date) ? current.filter((item) => item !== date) : [...current, date].sort(),
+  );
+};
+```
+
+달력 셀을 누를 때마다 같은 날짜면 제거, 없던 날짜면 추가하는 다중 선택 토글 로직입니다.
+
 ## 검증
 
 아래 명령으로 TypeScript 검사를 했습니다.

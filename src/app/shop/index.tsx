@@ -105,6 +105,20 @@ export default function ShopHomeScreen() {
 
         <Pressable
           accessibilityRole="button"
+          onPress={() => router.push('/shop/post' as never)}
+          style={styles.managePostButton}>
+          <Ionicons name="document-text-outline" size={18} color="#15181D" />
+          <View style={styles.managePostTextBlock}>
+            <Text style={styles.managePostButtonText}>공고 관리</Text>
+            <Text style={styles.managePostButtonSubtext}>
+              등록한 공고 {postedMatchings.length}개를 따로 관리
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="#15181D" />
+        </Pressable>
+
+        <Pressable
+          accessibilityRole="button"
           onPress={() => router.push('/shop/post/new' as never)}
           style={styles.createPostButton}>
           <Ionicons name="add-circle-outline" size={18} color="#FFFFFF" />
@@ -143,40 +157,12 @@ export default function ShopHomeScreen() {
           })}
         </View>
 
-        {postedMatchings.length > 0 && (
-          <View style={styles.postedSection}>
-            <View style={styles.postedSectionHeader}>
-              <Text style={styles.postedSectionTitle}>내가 등록한 공고</Text>
-              <Text style={styles.postedSectionCount}>{postedMatchings.length}개</Text>
-            </View>
-
-            <View style={styles.postedCardList}>
-              {postedMatchings.map((matching) => (
-                <Pressable
-                  accessibilityRole="button"
-                  key={matching.id}
-                  onPress={() =>
-                    router.push({
-                      pathname: '/matching/[id]',
-                      params: { id: matching.id },
-                    })
-                  }
-                  style={styles.postedCard}>
-                  <Text numberOfLines={1} style={styles.postedCardTitle}>
-                    {matching.shopName}
-                  </Text>
-                  <Text numberOfLines={1} style={styles.postedCardService}>
-                    {matching.service}
-                  </Text>
-                  <Text style={styles.postedCardMeta}>
-                    가능 날짜 {matching.availableDates?.length ?? 0}개 · 보증금{' '}
-                    {(matching.deposit ?? 0).toLocaleString()}원
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          </View>
-        )}
+        <View style={styles.consultationSectionHeader}>
+          <Text style={styles.consultationSectionTitle}>상담 목록</Text>
+          <Text style={styles.consultationSectionText}>
+            공고는 위 `공고 관리`에서, 상담은 아래 목록에서 확인하세요.
+          </Text>
+        </View>
 
         <View style={styles.list}>
           {filteredConsultationItems.map((item) => {
@@ -293,6 +279,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
   },
+  managePostButton: {
+    minHeight: 48,
+    marginBottom: 10,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  managePostTextBlock: {
+    flex: 1,
+  },
+  managePostButtonText: {
+    color: '#15181D',
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  managePostButtonSubtext: {
+    marginTop: 3,
+    color: '#747B87',
+    fontSize: 11,
+    fontWeight: '700',
+  },
   createPostButton: {
     minHeight: 48,
     borderRadius: 14,
@@ -349,53 +359,24 @@ const styles = StyleSheet.create({
   filterButtonTextSelected: {
     color: '#FFFFFF',
   },
+  consultationSectionHeader: {
+    marginTop: 18,
+  },
+  consultationSectionTitle: {
+    color: '#15181D',
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  consultationSectionText: {
+    marginTop: 6,
+    color: '#747B87',
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: '700',
+  },
   list: {
     marginTop: 18,
     gap: 14,
-  },
-  postedSection: {
-    marginTop: 18,
-  },
-  postedSectionHeader: {
-    marginBottom: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  postedSectionTitle: {
-    color: '#15181D',
-    fontSize: 17,
-    fontWeight: '900',
-  },
-  postedSectionCount: {
-    color: '#747B87',
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  postedCardList: {
-    gap: 10,
-  },
-  postedCard: {
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    padding: 14,
-  },
-  postedCardTitle: {
-    color: '#15181D',
-    fontSize: 15,
-    fontWeight: '900',
-  },
-  postedCardService: {
-    marginTop: 6,
-    color: '#555B66',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  postedCardMeta: {
-    marginTop: 8,
-    color: '#747B87',
-    fontSize: 12,
-    fontWeight: '700',
   },
   card: {
     borderRadius: 18,

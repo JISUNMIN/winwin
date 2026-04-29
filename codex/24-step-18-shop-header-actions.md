@@ -62,6 +62,31 @@ src/components/winwin/ChatScreen.tsx
 
 같은 동작을 자연스럽게 붙일 수 있습니다.
 
+## React 개발자 기준으로 보면
+
+- 웹에서 페이지 상단 toolbar 오른쪽 액션 버튼 묶음을 추가한 것과 비슷합니다.
+- RN의 헤더도 결국 컴포넌트 조합이라서, 별도 `ShopChatHeaderActions` 컴포넌트를 만들어 조건부 렌더링으로 꽂아 넣는 방식입니다.
+- `Alert`는 웹의 임시 `alert()`나 간단한 모달 placeholder 역할로 보면 이해하기 쉽습니다.
+
+## 핵심 로직
+
+- `ChatScreen`이 현재 라우트가 샵 전용인지 판단하고, 샵일 때만 헤더 오른쪽에 액션 컴포넌트를 렌더링합니다.
+- 버튼을 눌렀을 때는 아직 실제 API 호출 대신 `Alert`만 띄워서 흐름만 먼저 확인할 수 있게 했습니다.
+- 즉, UI 진입점은 먼저 만들고 실제 비즈니스 로직은 뒤에 붙이기 좋은 구조로 나눠둔 것입니다.
+
+## 핵심 코드
+
+```ts
+{isShopView ? (
+  <ShopChatHeaderActions
+    bookingFlowState={bookingFlowState}
+    onPressCustomerInfo={handlePressCustomerInfo}
+  />
+) : null}
+```
+
+샵 라우트일 때만 헤더 액션을 조건부 렌더링하는 구조입니다.
+
 ## 검증
 
 아래 명령으로 TypeScript 검사를 했습니다.
