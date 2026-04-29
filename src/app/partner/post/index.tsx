@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AccessGuardScreen } from '@/components/winwin/AccessGuardScreen';
 import { consumePostFeedbackMessage } from '@/data/post-feedback';
 import {
   formatKoreanDate,
@@ -12,6 +13,7 @@ import {
   type MatchingPostStatus,
   updatePostedMatchingStatus,
 } from '@/data/matchings';
+import { useRoleGuard } from '@/hooks/use-role-guard';
 
 type FilterKey = 'all' | MatchingPostStatus;
 type SortKey = 'latest' | 'date' | 'deposit';
@@ -33,6 +35,7 @@ function getSortValueDate(value?: string) {
 }
 
 export default function ShopPostManageScreen() {
+  const canAccess = useRoleGuard('partner', '/partner/post');
   const isFocused = useIsFocused();
   const [postedMatchings, setPostedMatchings] = useState(() => getPostedMatchings());
   const [selectedFilter, setSelectedFilter] = useState<FilterKey>('all');
@@ -40,6 +43,15 @@ export default function ShopPostManageScreen() {
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+
+  if (!canAccess) {
+    return (
+      <AccessGuardScreen
+        title="파트너 로그인 확인 중"
+        description="파트너 권한으로 로그인하면 등록한 공고를 수정하고 마감 상태를 관리할 수 있어요."
+      />
+    );
+  }
 
   useEffect(() => {
     if (isFocused) {

@@ -7,43 +7,41 @@
 - C:\Users\zentropy\Music\WinWin\WinWin
 
 ## Done
-- Expanded shop-side post management from `/shop/post` with status filters, sort options, edit flow, and shared post form.
-- Added post status helpers and edit helpers in `src/data/matchings.ts`, including `getPostedMatchingById(...)`, `updatePostedMatching(...)`, and `updatePostedMatchingStatus(...)`.
-- Extracted the long create form into `src/components/winwin/ShopPostForm.tsx` so create/edit screens share the same RN form UI and validation flow.
-- Added `/shop/post/[id]/edit` mock edit route and connected `수정` actions from the post management list.
-- Updated Codex docs through `codex/35-step-29-post-sort-options.md` and backfilled step docs `21` through `33` with React-developer-oriented explanations and short core code snippets.
-- Added a new RN study note: `codex/rn-tags-for-react-developers.md`.
+- Added mock auth state for `guest / customer / partner` in `src/auth/mock-auth.tsx` and connected role guards for customer chat and `/partner...` routes.
+- Added `/auth` role selection page plus guard redirect flow, and kept quick role-switch buttons on home for easier web testing.
+- Changed home matching card CTA from `지원하기` to `상세보기` in `src/components/winwin/MatchingCard.tsx`.
+- Hid `지원하기` for partner users on `src/app/matching/[id].tsx` and moved partner management entry out of the detail screen.
+- Added a partner-only `파트너 바로가기` menu on home that opens `상담 목록` and `공고 관리`.
+- Updated Codex notes with `codex/41-step-35-mock-auth-and-role-guards.md`, `codex/42-step-36-auth-ui-and-partner-entry-adjustments.md`, and refreshed `codex/README.md` and `codex/progress-and-next-steps.md`.
 
 ## Files
-- src/components/winwin/ShopPostForm.tsx
-- src/app/shop/post/new.tsx
-- src/app/shop/post/[id]/edit.tsx
-- src/app/shop/post/index.tsx
-- src/data/matchings.ts
-- codex/21-step-15-shop-chat-status-summary.md
-- codex/22-step-16-shop-chat-quick-actions.md
-- codex/23-step-17-booking-flow-state.md
-- codex/24-step-18-shop-header-actions.md
-- codex/25-step-19-shop-consultation-list.md
-- codex/26-step-20-consultation-mock-sync-and-shop-filters.md
-- codex/27-step-21-home-current-location.md
-- codex/28-step-22-shop-post-create-flow.md
-- codex/29-step-23-posted-listing-reflection.md
-- codex/30-step-24-post-form-structured-inputs.md
-- codex/31-step-25-post-location-verification.md
-- codex/32-step-26-shop-post-management-list.md
-- codex/33-step-27-post-status-and-filters.md
-- codex/34-step-28-post-edit-screen.md
-- codex/35-step-29-post-sort-options.md
-- codex/rn-tags-for-react-developers.md
+- src/auth/mock-auth.tsx
+- src/app/(tabs)/index.tsx
+- src/app/_layout.tsx
+- src/app/auth/index.tsx
+- src/app/chat/[id].tsx
+- src/app/matching/[id].tsx
+- src/app/partner/index.tsx
+- src/app/partner/chat/[id].tsx
+- src/app/partner/post/index.tsx
+- src/app/partner/post/new.tsx
+- src/app/partner/post/created.tsx
+- src/app/partner/post/[id]/edit.tsx
+- src/components/winwin/AccessGuardScreen.tsx
+- src/components/winwin/ChatScreen.tsx
+- src/components/winwin/MatchingCard.tsx
+- src/hooks/use-role-guard.ts
+- codex/41-step-35-mock-auth-and-role-guards.md
+- codex/42-step-36-auth-ui-and-partner-entry-adjustments.md
 - codex/README.md
 - codex/progress-and-next-steps.md
 
 ## Verification
-- Ran `npx.cmd tsc --noEmit --pretty false`; latest TypeScript check passed.
-- Did not run Expo web, Android emulator, or device interaction checks after the latest post management changes.
+- Ran `npx.cmd tsc --noEmit --pretty false`; TypeScript check passed after the latest changes.
+- Android app navigation responded during manual checking, but web auth navigation behaved inconsistently during dev-server testing.
+- Did not run a full Expo web/browser retest after every auth-navigation change in this session.
 
 ## Next Steps
-- Connect post status to home/matching list exposure rules.
-- Add a lightweight “수정 완료” feedback UI after saving edits.
-- Add search to `/shop/post` management list.
+- Decide whether the home quick role-switch buttons are temporary dev helpers or should be replaced by a cleaner product-style login CTA.
+- Recheck `/auth` navigation behavior on web after a clean `npx expo start -c` restart and browser hard refresh.
+- If web routing is still unstable, add lightweight click/debug indicators before changing auth flow again.

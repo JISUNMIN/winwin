@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useAuth } from '@/auth/mock-auth';
 import { BookingPicker } from '@/components/winwin/BookingPicker';
 import type { DesiredScheduleOption } from '@/components/winwin/BookingPicker';
 import { BookingRequestCard } from '@/components/winwin/BookingRequestCard';
@@ -111,6 +112,7 @@ export function ChatScreen({
   allowRoleSwitch = false,
 }: ChatScreenProps) {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { role, openAuth } = useAuth();
   const matching = getAllMatchings().find((item) => item.id === id);
   const consultation = id ? getPartnerConsultationByMatchingId(id) : undefined;
   const scrollRef = useRef<ScrollView>(null);
@@ -201,7 +203,20 @@ export function ChatScreen({
     );
   }
 
+  const customerRedirectTo = id ? `/chat/${id}` : '/';
+  const canUseCustomerActions = role === 'customer';
+  const openCustomerAuth = () =>
+    openAuth({
+      requiredRole: 'customer',
+      redirectTo: customerRedirectTo,
+    });
+
   const handleSendMessage = () => {
+    if (viewerRole === 'customer' && !canUseCustomerActions) {
+      openCustomerAuth();
+      return;
+    }
+
     const trimmedMessage = inputMessage.trim();
 
     if (!trimmedMessage) {
@@ -236,6 +251,11 @@ export function ChatScreen({
   };
 
   const handlePickPhoto = async () => {
+    if (viewerRole === 'customer' && !canUseCustomerActions) {
+      openCustomerAuth();
+      return;
+    }
+
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (!permission.granted) {
@@ -288,6 +308,11 @@ export function ChatScreen({
 
   const handleSendDesiredSchedule = (options: DesiredScheduleOption[]) => {
     if (viewerRole !== 'customer') {
+      return;
+    }
+
+    if (!canUseCustomerActions) {
+      openCustomerAuth();
       return;
     }
 
@@ -398,6 +423,11 @@ export function ChatScreen({
   };
 
   const handlePaymentComplete = (bookingData: BookingData) => {
+    if (!canUseCustomerActions) {
+      openCustomerAuth();
+      return;
+    }
+
     const confirmMessage: Message = {
       id: String(Date.now()),
       senderRole: 'customer',
@@ -583,7 +613,7 @@ export function ChatScreen({
                   <View style={styles.cardMessage}>
                     <BookingRequestCard
                       bookingData={message.bookingData}
-                      canAccept={isCustomerViewer}
+                      canAccept={isCustomerViewer && canUseCustomerActions}
                       onAccept={handleAcceptBooking}
                     />
                     <Text style={[styles.cardTimeText, isMine && styles.userCardTimeText]}>
@@ -629,7 +659,14 @@ export function ChatScreen({
           {isCustomerViewer && (
             <Pressable
               accessibilityRole="button"
-              onPress={() => setShowBookingPicker(true)}
+              onPress={() => {
+                if (!canUseCustomerActions) {
+                  openCustomerAuth();
+                  return;
+                }
+
+                setShowBookingPicker(true);
+              }}
               style={styles.iconButton}>
               <Ionicons name="calendar-outline" size={22} color="#747B87" />
             </Pressable>

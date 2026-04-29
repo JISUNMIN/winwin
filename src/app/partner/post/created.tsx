@@ -3,7 +3,11 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AccessGuardScreen } from '@/components/winwin/AccessGuardScreen';
+import { useRoleGuard } from '@/hooks/use-role-guard';
+
 export default function PartnerPostCreatedScreen() {
+  const canAccess = useRoleGuard('partner', '/partner/post/created');
   const params = useLocalSearchParams<{
     category?: string;
     shopName?: string;
@@ -15,6 +19,15 @@ export default function PartnerPostCreatedScreen() {
     dateCount?: string;
     deposit?: string;
   }>();
+
+  if (!canAccess) {
+    return (
+      <AccessGuardScreen
+        title="파트너 로그인 확인 중"
+        description="파트너 권한으로 로그인하면 방금 등록한 공고 요약을 확인할 수 있어요."
+      />
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -52,7 +65,7 @@ export default function PartnerPostCreatedScreen() {
             accessibilityRole="button"
             onPress={() => router.replace('/partner/post/new' as never)}
             style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>새 공고 다시 등록</Text>
+            <Text style={styles.secondaryButtonText}>새 공고 다시 등록</Text>
           </Pressable>
         </View>
       </View>

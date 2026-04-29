@@ -66,6 +66,8 @@ Git에는 올리지 않기 위해 `.gitignore`에 `codex/`를 추가했습니다
 - [38. Step 32 공고 관리 목록 검색](./38-step-32-shop-post-search.md)
 - [39. Step 33 위치 주소 표시와 검색 실행 방식 정리](./39-step-33-location-text-and-search-submit.md)
 - [40. Step 34 파트너 용어와 라우트 정리](./40-step-34-partner-terminology-and-routes.md)
+- [41. Step 35 Mock 인증과 역할 가드](./41-step-35-mock-auth-and-role-guards.md)
+- [42. Step 36 인증 UI와 파트너 진입 동선 조정](./42-step-36-auth-ui-and-partner-entry-adjustments.md)
 - [RN 태그 정리 for React 개발자](./rn-tags-for-react-developers.md)
 - [개발 중 저장, 새로고침, 재시작, 빌드 차이](./dev-server-refresh-build.md)
 - [진행 기록과 다음 할 일](./progress-and-next-steps.md)

@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { roleLabels, useAuth } from '@/auth/mock-auth';
 import { CategoryFilter } from '@/components/winwin/CategoryFilter';
 import { MatchingCard } from '@/components/winwin/MatchingCard';
 import { getDiscoverableMatchings } from '@/data/matchings';
@@ -13,6 +14,7 @@ import { formatFullLocationText } from '@/utils/location-text';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { role, isLoggedIn, openAuth, signInAs, signOut } = useAuth();
   const isFocused = useIsFocused();
   const [searchInput, setSearchInput] = useState('');
   const [query, setQuery] = useState('');
@@ -21,6 +23,7 @@ export default function HomeScreen() {
   const [currentLocation, setCurrentLocation] = useState('위치를 확인해보세요');
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
+  const [showPartnerMenu, setShowPartnerMenu] = useState(false);
 
   const handleFetchLocation = async () => {
     setIsFetchingLocation(true);
@@ -108,7 +111,108 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
         contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled">
+        keyboardShouldPersistTaps="handled"
+        onScrollBeginDrag={() => setShowPartnerMenu(false)}>
+        <View style={styles.accountBar}>
+          <View>
+            <Text style={styles.accountLabel}>현재 역할</Text>
+            <Text style={styles.accountValue}>
+              {isLoggedIn ? `${roleLabels[role]} 로그인` : '게스트'}
+            </Text>
+          </View>
+
+          <View style={styles.accountActions}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => openAuth()}
+              style={styles.accountButton}>
+              <Text style={styles.accountButtonText}>로그인</Text>
+            </Pressable>
+
+            <View style={styles.roleQuickActions}>
+              <Pressable
+                accessibilityRole="button"
+                onPress={signOut}
+                style={[styles.roleQuickButton, role === 'guest' && styles.roleQuickButtonActive]}>
+                <Text
+                  style={[
+                    styles.roleQuickButtonText,
+                    role === 'guest' && styles.roleQuickButtonTextActive,
+                  ]}>
+                  게스트
+                </Text>
+              </Pressable>
+
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => signInAs('customer')}
+                style={[
+                  styles.roleQuickButton,
+                  role === 'customer' && styles.roleQuickButtonActive,
+                ]}>
+                <Text
+                  style={[
+                    styles.roleQuickButtonText,
+                    role === 'customer' && styles.roleQuickButtonTextActive,
+                  ]}>
+                  고객
+                </Text>
+              </Pressable>
+
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => signInAs('partner')}
+                style={[
+                  styles.roleQuickButton,
+                  role === 'partner' && styles.roleQuickButtonActive,
+                ]}>
+                <Text
+                  style={[
+                    styles.roleQuickButtonText,
+                    role === 'partner' && styles.roleQuickButtonTextActive,
+                  ]}>
+                  파트너
+                </Text>
+              </Pressable>
+            </View>
+
+            {role === 'partner' && (
+              <View style={styles.partnerMenuWrap}>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => setShowPartnerMenu((current) => !current)}
+                  style={styles.partnerMenuButton}>
+                  <Text style={styles.partnerMenuButtonText}>파트너 바로가기</Text>
+                </Pressable>
+
+                {showPartnerMenu && (
+                  <View style={styles.partnerMenuDropdown}>
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={() => {
+                        setShowPartnerMenu(false);
+                        router.push('/partner');
+                      }}
+                      style={styles.partnerMenuItem}>
+                      <Text style={styles.partnerMenuItemText}>상담 목록</Text>
+                    </Pressable>
+
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={() => {
+                        setShowPartnerMenu(false);
+                        router.push('/partner/post');
+                      }}
+                      style={styles.partnerMenuItem}>
+                      <Text style={styles.partnerMenuItemText}>공고 관리</Text>
+                    </Pressable>
+                  </View>
+                )}
+              </View>
+            )}
+          </View>
+        </View>
+
         <View style={styles.header}>
           <Text style={styles.logo}>WinWin</Text>
           <Text style={styles.subtitle}>우리 동네 매칭 공고를 찾아보세요</Text>
@@ -214,6 +318,113 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 20,
     paddingBottom: 96,
+  },
+  accountBar: {
+    marginTop: 18,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  accountLabel: {
+    color: '#6D5DFB',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  accountValue: {
+    marginTop: 4,
+    color: '#15181D',
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  accountActions: {
+    alignItems: 'flex-end',
+    gap: 8,
+    position: 'relative',
+  },
+  accountButton: {
+    minHeight: 36,
+    borderRadius: 999,
+    backgroundColor: '#6D5DFB',
+    paddingHorizontal: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  accountButtonText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  roleQuickActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  roleQuickButton: {
+    minHeight: 32,
+    borderRadius: 999,
+    backgroundColor: '#F1F3F6',
+    paddingHorizontal: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  roleQuickButtonActive: {
+    backgroundColor: '#15181D',
+  },
+  roleQuickButtonText: {
+    color: '#555B66',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  roleQuickButtonTextActive: {
+    color: '#FFFFFF',
+  },
+  partnerMenuWrap: {
+    alignItems: 'flex-end',
+  },
+  partnerMenuButton: {
+    minHeight: 32,
+    borderRadius: 999,
+    backgroundColor: '#15181D',
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  partnerMenuButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  partnerMenuDropdown: {
+    position: 'absolute',
+    top: 38,
+    right: 0,
+    minWidth: 132,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E8EBF0',
+    paddingVertical: 6,
+    shadowColor: '#000000',
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+    zIndex: 20,
+  },
+  partnerMenuItem: {
+    minHeight: 42,
+    paddingHorizontal: 14,
+    justifyContent: 'center',
+  },
+  partnerMenuItemText: {
+    color: '#15181D',
+    fontSize: 14,
+    fontWeight: '800',
   },
   header: {
     paddingTop: 20,

@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
-import type { Href } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useAuth } from '@/auth/mock-auth';
 import {
   formatKoreanDate,
   getAllMatchings,
@@ -14,7 +14,9 @@ import {
 
 export default function MatchingDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { role, openAuth } = useAuth();
   const matching = getAllMatchings().find((item) => item.id === id);
+  const isPartner = role === 'partner';
 
   if (!matching) {
     return (
@@ -48,7 +50,7 @@ export default function MatchingDetailScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.hero}>
           <Image
             source={{ uri: matching.image }}
@@ -153,28 +155,31 @@ export default function MatchingDetailScreen() {
             </View>
           </View>
         )}
+
       </ScrollView>
 
-      <View style={styles.bottomBar}>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => router.push('/partner' as Href)}
-          style={styles.secondaryActionButton}>
-          <Text style={styles.secondaryActionButtonText}>파트너 상담 목록</Text>
-        </Pressable>
+      {!isPartner && (
+        <View style={styles.bottomBar}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => {
+              const redirectTo = `/chat/${matching.id}`;
 
-        <Pressable
-          accessibilityRole="button"
-          onPress={() =>
-            router.push({
-              pathname: '/chat/[id]',
-              params: { id: matching.id },
-            })
-          }
-          style={styles.primaryButton}>
-          <Text style={styles.primaryButtonText}>지원하기</Text>
-        </Pressable>
-      </View>
+              if (role === 'customer') {
+                router.push({
+                  pathname: '/chat/[id]',
+                  params: { id: matching.id },
+                });
+                return;
+              }
+
+              openAuth({ requiredRole: 'customer', redirectTo });
+            }}
+            style={styles.primaryButton}>
+            <Text style={styles.primaryButtonText}>지원하기</Text>
+          </Pressable>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -425,21 +430,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 20,
-    gap: 10,
-  },
-  secondaryActionButton: {
-    minHeight: 46,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#D7DCE4',
-    backgroundColor: '#F7F8FA',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  secondaryActionButtonText: {
-    color: '#333842',
-    fontSize: 14,
-    fontWeight: '900',
   },
   primaryButton: {
     minHeight: 50,

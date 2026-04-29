@@ -82,9 +82,7 @@ export function MatchingCard({ matching, onPress }: MatchingCardProps) {
             !onPress && styles.actionButtonDisabled,
             pressed && styles.actionButtonPressed,
           ]}>
-          <Text style={styles.actionText}>
-            {onPress ? '지원하기' : '상세 화면 다음 단계'}
-          </Text>
+          <Text style={styles.actionText}>{onPress ? '상세보기' : '상세 화면 다음 단계'}</Text>
         </Pressable>
       </View>
     </View>
