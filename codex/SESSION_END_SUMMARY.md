@@ -1,52 +1,49 @@
 # Session End Summary
 
 ## Date
-- 2026-04-28
+- 2026-04-29
 
 ## Workspace
 - C:\Users\zentropy\Music\WinWin\WinWin
 
 ## Done
-- Added project-local skill docs under `code/skills` and connected trigger rules through `AGENTS.md`.
-- Reworked Expo Router structure to use a root `Stack` with `(tabs)` for tab screens and separate dynamic routes for matching detail and chat.
-- Built WinWin customer flow from home list to matching detail to chat.
-- Added matching data model, category filter, matching cards, detail screen, chat screen, desired schedule selection, booking request card, payment modal, and image message card.
-- Updated chat scheduling so customers can send multiple desired date/time options; current mock selects the first option for the shop booking request.
-- Installed `expo-image-picker` and changed photo sending from sample images to real album/file selection.
-- Added/updated Codex learning notes through `codex/17-step-11-chat-photo-message.md`, plus dev-server/build notes and progress tracking.
+- Expanded shop-side post management from `/shop/post` with status filters, sort options, edit flow, and shared post form.
+- Added post status helpers and edit helpers in `src/data/matchings.ts`, including `getPostedMatchingById(...)`, `updatePostedMatching(...)`, and `updatePostedMatchingStatus(...)`.
+- Extracted the long create form into `src/components/winwin/ShopPostForm.tsx` so create/edit screens share the same RN form UI and validation flow.
+- Added `/shop/post/[id]/edit` mock edit route and connected `수정` actions from the post management list.
+- Updated Codex docs through `codex/35-step-29-post-sort-options.md` and backfilled step docs `21` through `33` with React-developer-oriented explanations and short core code snippets.
+- Added a new RN study note: `codex/rn-tags-for-react-developers.md`.
 
 ## Files
-- src/app/_layout.tsx
-- src/app/(tabs)/_layout.tsx
-- src/app/(tabs)/index.tsx
-- src/app/(tabs)/explore.tsx
-- src/app/matching/[id].tsx
-- src/app/chat/[id].tsx
-- src/components/winwin/CategoryFilter.tsx
-- src/components/winwin/MatchingCard.tsx
-- src/components/winwin/BookingPicker.tsx
-- src/components/winwin/DesiredScheduleCard.tsx
-- src/components/winwin/BookingRequestCard.tsx
-- src/components/winwin/PaymentModal.tsx
-- src/components/winwin/ImageMessageCard.tsx
+- src/components/winwin/ShopPostForm.tsx
+- src/app/shop/post/new.tsx
+- src/app/shop/post/[id]/edit.tsx
+- src/app/shop/post/index.tsx
 - src/data/matchings.ts
-- package.json
-- package-lock.json
-- AGENTS.md
-- code/skills/session-end-summary.md
-- code/skills/continue-next-task.md
-- codex/*.md
+- codex/21-step-15-shop-chat-status-summary.md
+- codex/22-step-16-shop-chat-quick-actions.md
+- codex/23-step-17-booking-flow-state.md
+- codex/24-step-18-shop-header-actions.md
+- codex/25-step-19-shop-consultation-list.md
+- codex/26-step-20-consultation-mock-sync-and-shop-filters.md
+- codex/27-step-21-home-current-location.md
+- codex/28-step-22-shop-post-create-flow.md
+- codex/29-step-23-posted-listing-reflection.md
+- codex/30-step-24-post-form-structured-inputs.md
+- codex/31-step-25-post-location-verification.md
+- codex/32-step-26-shop-post-management-list.md
+- codex/33-step-27-post-status-and-filters.md
+- codex/34-step-28-post-edit-screen.md
+- codex/35-step-29-post-sort-options.md
+- codex/rn-tags-for-react-developers.md
+- codex/README.md
+- codex/progress-and-next-steps.md
 
 ## Verification
 - Ran `npx.cmd tsc --noEmit --pretty false`; latest TypeScript check passed.
-- Did not run Android Studio or a physical Android device build before session end.
-- `npx.cmd expo install expo-image-picker` completed; npm reported 11 moderate audit warnings.
+- Did not run Expo web, Android emulator, or device interaction checks after the latest post management changes.
 
 ## Next Steps
-- Restart Expo with `npx expo start -c` after the native package install.
-- Use `세션종료` to follow `code/skills/session-end-summary.md`.
-- Use `다음작업진행해줘` to follow `code/skills/continue-next-task.md`.
-- Test album image selection on web and Android device.
-- Decide whether to keep using Expo Go or create a development build for Android.
-- Add shop-side flow so the shop can choose one desired schedule and send a booking request.
-- Later: role-based chat alignment, real payment integration, image upload server flow, camera/multiple image support.
+- Connect post status to home/matching list exposure rules.
+- Add a lightweight “수정 완료” feedback UI after saving edits.
+- Add search to `/shop/post` management list.

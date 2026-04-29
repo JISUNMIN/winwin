@@ -61,6 +61,7 @@ Git에는 올리지 않기 위해 `.gitignore`에 `codex/`를 추가했습니다
 - [33. Step 27 공고 상태값과 관리 필터](./33-step-27-post-status-and-filters.md)
 - [34. Step 28 공고 수정 화면](./34-step-28-post-edit-screen.md)
 - [35. Step 29 공고 관리 목록 정렬](./35-step-29-post-sort-options.md)
+- [RN 태그 정리 for React 개발자](./rn-tags-for-react-developers.md)
 - [개발 중 저장, 새로고침, 재시작, 빌드 차이](./dev-server-refresh-build.md)
 - [진행 기록과 다음 할 일](./progress-and-next-steps.md)
 
