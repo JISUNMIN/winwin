@@ -102,6 +102,24 @@ codex/progress-and-next-steps.md
 
 그래서 게스트는 상세 공고까지는 볼 수 있어도, 실제 상담과 예약 단계부터는 로그인 흐름을 거치게 됩니다.
 
+## React 개발자 기준으로 보면
+
+이번 단계는 React 웹에서 자주 하는:
+
+- 전역 auth context 만들기
+- protected route 붙이기
+- 로그인 후 원래 가려던 페이지로 보내기
+
+를 Expo Router 구조에 맞게 옮긴 것에 가깝습니다.
+
+즉:
+
+- `MockAuthProvider`: 웹의 `AuthProvider`
+- `useRoleGuard(...)`: 페이지 단위 protected route
+- `openAuth({ redirectTo })`: 로그인 후 원래 경로 복귀용 redirect 정보 저장
+
+정도로 이해하면 흐름을 잡기 쉽습니다.
+
 ## 핵심 코드
 
 ```ts

@@ -3,11 +3,9 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AccessGuardScreen } from '@/components/winwin/AccessGuardScreen';
-import { useRoleGuard } from '@/hooks/use-role-guard';
+import { ProtectedRoleScreen } from '@/components/winwin/ProtectedRoleScreen';
 
 export default function PartnerPostCreatedScreen() {
-  const canAccess = useRoleGuard('partner', '/partner/post/created');
   const params = useLocalSearchParams<{
     category?: string;
     shopName?: string;
@@ -20,56 +18,55 @@ export default function PartnerPostCreatedScreen() {
     deposit?: string;
   }>();
 
-  if (!canAccess) {
-    return (
-      <AccessGuardScreen
-        title="파트너 로그인 확인 중"
-        description="파트너 권한으로 로그인하면 방금 등록한 공고 요약을 확인할 수 있어요."
-      />
-    );
-  }
-
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <View style={styles.iconBox}>
-          <Ionicons name="checkmark-circle" size={46} color="#16A34A" />
+    <ProtectedRoleScreen
+      requiredRole="partner"
+      redirectTo="/partner/post/created"
+      loadingTitle="파트너 상태 불러오는 중"
+      loadingDescription="저장된 로그인 상태를 확인한 뒤 등록 완료 화면으로 이어갈게요."
+      deniedTitle="파트너 로그인 확인 중"
+      deniedDescription="파트너 권한으로 로그인하면 방금 등록한 공고 요약을 확인할 수 있어요.">
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.container}>
+          <View style={styles.iconBox}>
+            <Ionicons name="checkmark-circle" size={46} color="#16A34A" />
+          </View>
+
+          <Text style={styles.title}>공고 등록 완료</Text>
+          <Text style={styles.subtitle}>
+            기본 공고 등록 mock 흐름이 완료되었습니다. 나중에는 실제 목록 데이터와 연결할 수 있어요.
+          </Text>
+
+          <View style={styles.summaryCard}>
+            <Text style={styles.summaryTitle}>{params.shopName ?? '샵 이름 미정'}</Text>
+            <Text style={styles.summaryItem}>카테고리: {params.category ?? '-'}</Text>
+            <Text style={styles.summaryItem}>서비스: {params.service ?? '-'}</Text>
+            <Text style={styles.summaryItem}>공개 위치: {params.location ?? '-'}</Text>
+            <Text style={styles.summaryItem}>상세 위치: {params.detailLocation ?? '-'}</Text>
+            <Text style={styles.summaryItem}>위치 공개 방식: {params.locationVisibility ?? '-'}</Text>
+            <Text style={styles.summaryItem}>지원 조건 수: {params.requirementCount ?? '0'}개</Text>
+            <Text style={styles.summaryItem}>가능 날짜 수: {params.dateCount ?? '0'}개</Text>
+            <Text style={styles.summaryItem}>보증금: {(params.deposit ?? '0').toString()}원</Text>
+          </View>
+
+          <View style={styles.buttonGroup}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.replace('/partner' as never)}
+              style={styles.primaryButton}>
+              <Text style={styles.primaryButtonText}>파트너 상담 목록으로 이동</Text>
+            </Pressable>
+
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.replace('/partner/post/new' as never)}
+              style={styles.secondaryButton}>
+              <Text style={styles.secondaryButtonText}>새 공고 다시 등록</Text>
+            </Pressable>
+          </View>
         </View>
-
-        <Text style={styles.title}>공고 등록 완료</Text>
-        <Text style={styles.subtitle}>
-          기본 공고 등록 mock 흐름이 완료되었습니다. 나중에는 실제 목록 데이터와 연결할 수 있어요.
-        </Text>
-
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>{params.shopName ?? '샵 이름 미정'}</Text>
-          <Text style={styles.summaryItem}>카테고리: {params.category ?? '-'}</Text>
-          <Text style={styles.summaryItem}>서비스: {params.service ?? '-'}</Text>
-          <Text style={styles.summaryItem}>공개 위치: {params.location ?? '-'}</Text>
-          <Text style={styles.summaryItem}>상세 위치: {params.detailLocation ?? '-'}</Text>
-          <Text style={styles.summaryItem}>위치 공개 방식: {params.locationVisibility ?? '-'}</Text>
-          <Text style={styles.summaryItem}>지원 조건 수: {params.requirementCount ?? '0'}개</Text>
-          <Text style={styles.summaryItem}>가능 날짜 수: {params.dateCount ?? '0'}개</Text>
-          <Text style={styles.summaryItem}>보증금: {(params.deposit ?? '0').toString()}원</Text>
-        </View>
-
-        <View style={styles.buttonGroup}>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => router.replace('/partner' as never)}
-            style={styles.primaryButton}>
-            <Text style={styles.primaryButtonText}>파트너 상담 목록으로 이동</Text>
-          </Pressable>
-
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => router.replace('/partner/post/new' as never)}
-            style={styles.secondaryButton}>
-            <Text style={styles.secondaryButtonText}>새 공고 다시 등록</Text>
-          </Pressable>
-        </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </ProtectedRoleScreen>
   );
 }
 

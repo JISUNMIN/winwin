@@ -11,6 +11,9 @@ Git에는 올리지 않기 위해 `.gitignore`에 `codex/`를 추가했습니다
 - 디자인 적용은 기본 예제를 띄워보고 구조를 이해한 뒤에 진행합니다.
 - Step 문서에는 React 개발자가 RN을 이해하기 쉬운 설명을 짧게 적습니다.
   예: `View = div 비슷한 레이아웃 박스`, `Pressable = button 비슷한 인터랙션 컴포넌트`
+- Step 문서에는 반드시 `## React 개발자 기준으로 보면` 섹션을 넣습니다.
+  여기에는 이번 단계가 웹 React 기준으로 어떤 패턴과 비슷한지 3~6줄 정도로 적습니다.
+  예: `AuthProvider`, `protected route`, `localStorage`, `debounce 없는 submit 검색`, `optimistic UI` 같은 비교
 - Step 문서에는 핵심 로직을 2~4줄 정도로라도 적습니다.
   예: 어떤 상태가 어디에 저장되는지, 어떤 함수가 화면을 갱신하는지
 - 구현 기록만 적지 않고, 왜 그렇게 동작하는지도 한 줄씩 설명합니다.
@@ -68,6 +71,9 @@ Git에는 올리지 않기 위해 `.gitignore`에 `codex/`를 추가했습니다
 - [40. Step 34 파트너 용어와 라우트 정리](./40-step-34-partner-terminology-and-routes.md)
 - [41. Step 35 Mock 인증과 역할 가드](./41-step-35-mock-auth-and-role-guards.md)
 - [42. Step 36 인증 UI와 파트너 진입 동선 조정](./42-step-36-auth-ui-and-partner-entry-adjustments.md)
+- [43. Step 37 Mock 인증 상태 유지](./43-step-37-mock-auth-persistence.md)
+- [44. Step 38 마지막 진입 화면 복구](./44-step-38-last-route-restore.md)
+- [45. Step 39 보호 화면 공용화와 역할 변경 경로 정리](./45-step-39-protected-screen-and-route-cleanup.md)
 - [RN 태그 정리 for React 개발자](./rn-tags-for-react-developers.md)
 - [개발 중 저장, 새로고침, 재시작, 빌드 차이](./dev-server-refresh-build.md)
 - [진행 기록과 다음 할 일](./progress-and-next-steps.md)

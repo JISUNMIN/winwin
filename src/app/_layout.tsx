@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import React from 'react';
 import { useColorScheme } from 'react-native';
 
+import { AuthRoutePersistence } from '@/auth/auth-route-persistence';
 import { MockAuthProvider } from '@/auth/mock-auth';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 
@@ -12,6 +13,7 @@ export default function RootLayout() {
     <MockAuthProvider>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <AnimatedSplashOverlay />
+        <AuthRoutePersistence />
         <Stack screenOptions={{ headerShown: false }} />
       </ThemeProvider>
     </MockAuthProvider>

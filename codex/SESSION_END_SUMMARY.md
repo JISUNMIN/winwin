@@ -7,41 +7,37 @@
 - C:\Users\zentropy\Music\WinWin\WinWin
 
 ## Done
-- Added mock auth state for `guest / customer / partner` in `src/auth/mock-auth.tsx` and connected role guards for customer chat and `/partner...` routes.
-- Added `/auth` role selection page plus guard redirect flow, and kept quick role-switch buttons on home for easier web testing.
-- Changed home matching card CTA from `지원하기` to `상세보기` in `src/components/winwin/MatchingCard.tsx`.
-- Hid `지원하기` for partner users on `src/app/matching/[id].tsx` and moved partner management entry out of the detail screen.
-- Added a partner-only `파트너 바로가기` menu on home that opens `상담 목록` and `공고 관리`.
-- Updated Codex notes with `codex/41-step-35-mock-auth-and-role-guards.md`, `codex/42-step-36-auth-ui-and-partner-entry-adjustments.md`, and refreshed `codex/README.md` and `codex/progress-and-next-steps.md`.
+- Persisted mock auth role with `AsyncStorage` in `src/auth/mock-auth.tsx` and delayed guards until auth restore is ready.
+- Added last-route restore in `src/auth/auth-route-persistence.tsx` so restart returns to the last accessible screen, excluding `/auth`.
+- Added automatic cleanup when role changes make the current route invalid, redirecting to the default route for that role and updating stored last-route state.
+- Introduced `src/components/winwin/ProtectedRoleScreen.tsx` to unify loading vs denied guard UI across customer/partner protected screens.
+- Updated Codex notes for Steps 43-45 and refreshed `codex/README.md` and `codex/progress-and-next-steps.md`.
+- Rolled back the draft auth CTA polish work; that idea is tracked only as a future item in `codex/progress-and-next-steps.md`.
 
 ## Files
+- src/auth/auth-route-persistence.tsx
 - src/auth/mock-auth.tsx
-- src/app/(tabs)/index.tsx
 - src/app/_layout.tsx
 - src/app/auth/index.tsx
 - src/app/chat/[id].tsx
-- src/app/matching/[id].tsx
 - src/app/partner/index.tsx
 - src/app/partner/chat/[id].tsx
 - src/app/partner/post/index.tsx
 - src/app/partner/post/new.tsx
 - src/app/partner/post/created.tsx
 - src/app/partner/post/[id]/edit.tsx
-- src/components/winwin/AccessGuardScreen.tsx
-- src/components/winwin/ChatScreen.tsx
-- src/components/winwin/MatchingCard.tsx
+- src/components/winwin/ProtectedRoleScreen.tsx
 - src/hooks/use-role-guard.ts
-- codex/41-step-35-mock-auth-and-role-guards.md
-- codex/42-step-36-auth-ui-and-partner-entry-adjustments.md
+- codex/43-step-37-mock-auth-persistence.md
+- codex/44-step-38-last-route-restore.md
+- codex/45-step-39-protected-screen-and-route-cleanup.md
 - codex/README.md
 - codex/progress-and-next-steps.md
 
 ## Verification
-- Ran `npx.cmd tsc --noEmit --pretty false`; TypeScript check passed after the latest changes.
-- Android app navigation responded during manual checking, but web auth navigation behaved inconsistently during dev-server testing.
-- Did not run a full Expo web/browser retest after every auth-navigation change in this session.
+- Ran `npx.cmd tsc --noEmit --pretty false`; TypeScript check passed after each auth/guard refactor and after the rollback.
+- Did not run a full Expo manual regression pass across all auth flows in browser/device during this wrap-up.
 
 ## Next Steps
-- Decide whether the home quick role-switch buttons are temporary dev helpers or should be replaced by a cleaner product-style login CTA.
-- Recheck `/auth` navigation behavior on web after a clean `npx expo start -c` restart and browser hard refresh.
-- If web routing is still unstable, add lightweight click/debug indicators before changing auth flow again.
+- If needed later, revisit auth CTA polish: guest-specific start cards on home, clearer dev-only role-switch labeling, and softer `/auth` copy.
+- Manually retest role restore, route restore, and role-change redirect behavior on both web and mobile flows.

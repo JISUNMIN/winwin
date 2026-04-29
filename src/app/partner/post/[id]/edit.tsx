@@ -1,25 +1,14 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { Text, View } from 'react-native';
 
-import { AccessGuardScreen } from '@/components/winwin/AccessGuardScreen';
+import { ProtectedRoleScreen } from '@/components/winwin/ProtectedRoleScreen';
 import { ShopPostForm } from '@/components/winwin/ShopPostForm';
 import { setPostFeedbackMessage } from '@/data/post-feedback';
 import { getPostedMatchingById, updatePostedMatching } from '@/data/matchings';
-import { useRoleGuard } from '@/hooks/use-role-guard';
 
 export default function PartnerPostEditScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
-  const canAccess = useRoleGuard('partner', params.id ? `/partner/post/${params.id}/edit` : '/partner/post');
   const matching = params.id ? getPostedMatchingById(params.id) : null;
-
-  if (!canAccess) {
-    return (
-      <AccessGuardScreen
-        title="파트너 로그인 확인 중"
-        description="파트너 권한으로 로그인하면 기존 공고를 수정할 수 있어요."
-      />
-    );
-  }
 
   if (!matching || !params.id) {
     return (
@@ -44,15 +33,23 @@ export default function PartnerPostEditScreen() {
   }
 
   return (
-    <ShopPostForm
-      mode="edit"
-      initialMatching={matching}
-      onBack={() => router.back()}
-      onSubmit={(draft) => {
-        updatePostedMatching(params.id!, draft);
-        setPostFeedbackMessage('공고 수정이 완료됐어요.');
-        router.replace('/partner/post' as never);
-      }}
-    />
+    <ProtectedRoleScreen
+      requiredRole="partner"
+      redirectTo={params.id ? `/partner/post/${params.id}/edit` : '/partner/post'}
+      loadingTitle="파트너 상태 불러오는 중"
+      loadingDescription="저장된 로그인 상태를 확인한 뒤 공고 수정 화면으로 이어갈게요."
+      deniedTitle="파트너 로그인 확인 중"
+      deniedDescription="파트너 권한으로 로그인하면 기존 공고를 수정할 수 있어요.">
+      <ShopPostForm
+        mode="edit"
+        initialMatching={matching}
+        onBack={() => router.back()}
+        onSubmit={(draft) => {
+          updatePostedMatching(params.id!, draft);
+          setPostFeedbackMessage('공고 수정이 완료됐어요.');
+          router.replace('/partner/post' as never);
+        }}
+      />
+    </ProtectedRoleScreen>
   );
 }

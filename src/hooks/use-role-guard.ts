@@ -5,11 +5,15 @@ import { useAuth, type AuthenticatedRole } from '@/auth/mock-auth';
 
 export function useRoleGuard(requiredRole: AuthenticatedRole, redirectTo: string) {
   const router = useRouter();
-  const { role } = useAuth();
+  const { role, isReady } = useAuth();
   const hasRedirectedRef = useRef(false);
   const canAccess = role === requiredRole;
 
   useEffect(() => {
+    if (!isReady) {
+      return;
+    }
+
     if (canAccess || hasRedirectedRef.current) {
       return;
     }
@@ -24,7 +28,7 @@ export function useRoleGuard(requiredRole: AuthenticatedRole, redirectTo: string
         },
       } as never,
     );
-  }, [canAccess, redirectTo, requiredRole, router]);
+  }, [canAccess, isReady, redirectTo, requiredRole, router]);
 
-  return canAccess;
+  return isReady && canAccess;
 }

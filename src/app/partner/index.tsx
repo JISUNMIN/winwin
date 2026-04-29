@@ -6,14 +6,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AccessGuardScreen } from '@/components/winwin/AccessGuardScreen';
+import { ProtectedRoleScreen } from '@/components/winwin/ProtectedRoleScreen';
 import {
   formatConsultationUpdatedText,
   mockPartnerConsultations,
   type ConsultationStatusTone,
 } from '@/data/consultations';
 import { formatKoreanDate, getPostedMatchings, mockMatchings } from '@/data/matchings';
-import { useRoleGuard } from '@/hooks/use-role-guard';
 
 type FilterKey = 'all' | ConsultationStatusTone;
 
@@ -54,19 +53,23 @@ function getStatusStyles(tone: ConsultationStatusTone) {
 }
 
 export default function PartnerHomeScreen() {
-  const canAccess = useRoleGuard('partner', '/partner');
+  return (
+    <ProtectedRoleScreen
+      requiredRole="partner"
+      redirectTo="/partner"
+      loadingTitle="파트너 상태 불러오는 중"
+      loadingDescription="저장된 로그인 상태를 확인한 뒤 상담 목록으로 이어갈게요."
+      deniedTitle="파트너 로그인 확인 중"
+      deniedDescription="파트너 권한으로 로그인하면 상담 목록과 공고 관리 화면으로 들어갈 수 있어요.">
+      <PartnerHomeContent />
+    </ProtectedRoleScreen>
+  );
+}
+
+function PartnerHomeContent() {
   const isFocused = useIsFocused();
   const [selectedFilter, setSelectedFilter] = useState<FilterKey>('all');
   const [postedMatchings, setPostedMatchings] = useState(() => getPostedMatchings());
-
-  if (!canAccess) {
-    return (
-      <AccessGuardScreen
-        title="파트너 로그인 확인 중"
-        description="파트너 권한으로 로그인하면 상담 목록과 공고 관리 화면으로 들어갈 수 있어요."
-      />
-    );
-  }
 
   useEffect(() => {
     if (isFocused) {
