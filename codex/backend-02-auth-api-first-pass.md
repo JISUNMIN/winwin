@@ -742,6 +742,151 @@ Java/Spring이 처음이면 아래 순서가 제일 덜 헷갈립니다.
 
 가 자연스럽게 이어집니다.
 
+## `import`는 왜 필요한가
+
+Java를 처음 보면:
+
+```java
+private final AuthService authService;
+```
+
+같은 코드가 어떻게 되는지 헷갈릴 수 있습니다.
+
+여기서 먼저 구분할 것은 두 가지입니다.
+
+### 1. `import`
+
+`import`는
+
+```text
+이 파일 안에서 이 클래스 이름을 쓰겠다
+```
+
+라는 뜻입니다.
+
+예를 들어 다른 패키지에 있는 클래스를 현재 파일에서 쓰려면 보통 `import`가 필요합니다.
+
+예:
+
+```java
+import com.winwin.backend.security.JwtAuthenticationFilter;
+```
+
+그러면 아래처럼 클래스 이름을 짧게 쓸 수 있습니다.
+
+```java
+JwtAuthenticationFilter jwtAuthenticationFilter
+```
+
+만약 `import`를 안 쓰면 패키지 이름까지 전부 적어야 합니다.
+
+예:
+
+```java
+com.winwin.backend.security.JwtAuthenticationFilter jwtAuthenticationFilter
+```
+
+즉 `import`는 “실제 객체를 만드는 기능”이 아니라,
+그 클래스 이름을 현재 파일에서 편하게 쓰게 해주는 문법입니다.
+
+### 2. 같은 패키지면 왜 `import`가 없어도 되나
+
+예를 들어 [AuthController.java](/abs/path/C:/Users/zentropy/Music/WinWin/WinWin/backend/src/main/java/com/winwin/backend/auth/AuthController.java)와 [AuthService.java](/abs/path/C:/Users/zentropy/Music/WinWin/WinWin/backend/src/main/java/com/winwin/backend/auth/AuthService.java)는 둘 다:
+
+```text
+com.winwin.backend.auth
+```
+
+패키지 안에 있습니다.
+
+그래서 같은 패키지끼리는 `import` 없이도 이름을 바로 쓸 수 있습니다.
+
+즉:
+
+- 같은 패키지면 `import` 없이 가능
+- 다른 패키지면 보통 `import` 필요
+- `String`, `Long`처럼 `java.lang` 안의 클래스는 자동이라 `import` 없이 가능
+
+### 3. `import`와 Spring 주입은 다른 개념
+
+가장 중요한 건 이 부분입니다.
+
+```java
+private final AuthService authService;
+```
+
+가 동작하는 이유를 두 단계로 나눠서 봐야 합니다.
+
+#### Java 문법 기준
+
+`AuthService`라는 타입 이름을 현재 파일이 알아야 합니다.
+
+- 같은 패키지면 바로 사용 가능
+- 다른 패키지면 `import` 필요
+
+즉 이 단계는:
+
+```text
+이 이름이 무슨 클래스인지 알게 해주는 단계
+```
+
+입니다.
+
+#### Spring 동작 기준
+
+그 다음 생성자에서:
+
+```java
+public AuthController(AuthService authService) {
+  this.authService = authService;
+}
+```
+
+처럼 받으면, Spring이 `AuthService` Bean을 찾아 실제 객체를 넣어줍니다.
+
+즉 이 단계는:
+
+```text
+실제 객체를 넣어주는 단계
+```
+
+입니다.
+
+짧게 정리하면:
+
+```text
+import = 이름을 알게 해주는 것
+Spring 주입 = 실제 객체를 넣어주는 것
+```
+
+입니다.
+
+### 4. 코드를 읽을 때는 무엇을 타고 가면 되나
+
+실제로 코드를 읽을 때는 `import` 줄 자체를 따라가기보다,
+아래를 따라가면 더 잘 보입니다.
+
+1. Controller 메서드
+2. 그 안에서 호출하는 Service 메서드
+3. Service가 쓰는 Repository / TokenProvider / Encoder
+4. `@Service`, `@Component`, `@Bean`, `@Configuration` 같은 Spring 연결 지점
+
+예를 들어 회원가입은 대충 이렇게 읽으면 됩니다.
+
+```text
+AuthController.signup()
+-> AuthService.signup()
+-> UserRepository.existsByEmail(), save()
+-> JwtTokenProvider.generateAccessToken()
+```
+
+즉 Java/Spring에서는:
+
+- `import`는 이름을 보이게 해주는 준비
+- 실제 흐름 추적은 메서드 호출과 Spring 연결을 따라가는 방식
+
+으로 이해하면 됩니다.
+
 ## Express/Next API 개발자 기준으로 보면
 
 Express나 Next API 기준으로 비유하면 이번 구조는 대충 이렇게 대응됩니다.

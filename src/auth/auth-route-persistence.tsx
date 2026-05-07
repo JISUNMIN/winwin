@@ -19,7 +19,7 @@ function canAccessRoute(role: AppRole, pathname: string) {
 }
 
 function shouldRestoreFromPath(pathname: string) {
-  return pathname === '/' || pathname === '/auth';
+  return pathname === '/';
 }
 
 function shouldPersistPath(pathname: string) {

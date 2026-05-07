@@ -681,6 +681,205 @@ Spring Boot가 원래 필수로 만드는 핵심 소스 파일이 아닙니다.
 - `spring-boot-*.err.log`
   실행 확인용 에러 로그 파일
 
+## DB는 어디서 어떻게 열어보나
+
+처음에는:
+
+```text
+PostgreSQL을 설치했다는 건 알겠는데
+그 DBMS를 실제로 어디서 열고 어떻게 보나?
+```
+
+가 헷갈릴 수 있습니다.
+
+지금 프로젝트는 PostgreSQL을 로컬 PC에 설치해두고,
+Spring Boot가 그 로컬 DB에 접속하는 구조입니다.
+
+즉 구조는:
+
+```text
+내 PC에 PostgreSQL 서버가 실행 중
+-> Spring Boot가 localhost:5432로 접속
+-> winwin 데이터베이스 사용
+```
+
+입니다.
+
+### 1. 터미널에서 직접 접속할 수 있다
+
+PostgreSQL은 PowerShell 같은 터미널에서 직접 들어갈 수 있습니다.
+
+예:
+
+```powershell
+psql -U postgres -h localhost -d winwin
+```
+
+들어가면 SQL을 직접 칠 수 있습니다.
+
+예:
+
+```sql
+\dt
+select * from users;
+\q
+```
+
+실제로는 아래처럼 보일 수 있습니다.
+
+```text
+$ psql -U postgres -h localhost -d winwin
+Password for user postgres:
+
+psql (16.13)
+Type "help" for help.
+
+winwin=# select * from users;
+ id |         created_at         |        email        |    name     |                        password_hash                         |  role   |         updated_at
+----+----------------------------+---------------------+-------------+--------------------------------------------------------------+---------+----------------------------
+  1 | 2026-04-30 14:35:12.458344 | partner@example.com | Partner One | $2a$10$i4rrRhdofdpzgkbuAO2oO.ayeh6klYIThM7YLpW.p7pCT6mlLGF0O | PARTNER | 2026-04-30 14:35:12.458344
+(1 row)
+```
+
+이 예시는 뜻이 대충 이렇습니다.
+
+- `users` 테이블에 현재 사용자 1명이 들어 있다
+- 이메일은 `partner@example.com`
+- 이름은 `Partner One`
+- 역할은 `PARTNER`
+- 비밀번호는 원문이 아니라 해시값으로 저장된다
+
+즉:
+
+- `\dt`
+  테이블 목록 보기
+
+- `select * from users;`
+  `users` 테이블 데이터 보기
+
+- `\q`
+  종료
+
+### 2. GUI 프로그램으로도 볼 수 있다
+
+터미널 말고 화면으로 보고 싶으면 GUI 도구를 쓸 수 있습니다.
+
+PostgreSQL에서는 보통 아래를 많이 씁니다.
+
+- `pgAdmin 4`
+- DBeaver
+- DataGrip
+
+이런 도구로 접속하면:
+
+- 서버 목록 보기
+- 데이터베이스 목록 보기
+- 테이블 클릭해서 데이터 보기
+- SQL 에디터에서 쿼리 실행
+
+같은 작업을 더 편하게 할 수 있습니다.
+
+예를 들어 PostgreSQL 연결 정보는 보통 이런 식입니다.
+
+- host: `localhost`
+- port: `5432`
+- username: `postgres`
+- password: 로컬 설치 때 정한 값
+- database: `winwin`
+
+### 3. VS Code에서도 DB에 접속할 수 있다
+
+중요한 점은:
+
+```text
+VS Code 안에 PostgreSQL이나 MySQL이 설치되는 것은 아니고
+보통 DB 서버는 PC에 따로 설치하고
+VS Code는 그 DB에 접속하는 클라이언트 역할을 한다
+```
+
+는 것입니다.
+
+즉:
+
+- DB 서버는 Windows에 설치
+- VS Code는 접속/조회/쿼리 실행 도구
+
+라고 보면 됩니다.
+
+VS Code에서는 보통 이런 확장을 많이 씁니다.
+
+- `SQLTools`
+- `Database Client`
+- PostgreSQL / MySQL 관련 확장
+
+이런 확장을 쓰면 VS Code 안에서:
+
+- DB 연결 생성
+- 테이블 목록 확인
+- SQL 파일 작성
+- 쿼리 실행
+
+이 가능합니다.
+
+### 4. MySQL도 거의 같은 방식으로 쓸 수 있다
+
+MySQL도 방식은 거의 같습니다.
+
+구조:
+
+```text
+내 PC에 MySQL 서버 설치
+-> 서버 실행
+-> VS Code나 터미널에서 접속
+-> SQL 실행
+```
+
+터미널 예:
+
+```powershell
+mysql -u root -p
+```
+
+들어간 뒤에는:
+
+```sql
+SHOW DATABASES;
+USE mydb;
+SHOW TABLES;
+SELECT * FROM users;
+```
+
+같이 사용할 수 있습니다.
+
+즉 PostgreSQL이든 MySQL이든 공통 개념은 같습니다.
+
+```text
+1. DB 서버를 내 PC에 설치
+2. 서버를 실행
+3. 터미널 또는 GUI 또는 VS Code로 접속
+4. SQL을 실행
+```
+
+### 5. 지금 WinWin 프로젝트 기준으로 기억할 것
+
+지금 프로젝트에서는 PostgreSQL을 쓰고 있으니
+우선 아래만 기억해도 충분합니다.
+
+- Spring Boot는 PostgreSQL에 연결되어 있다
+- DB는 터미널 `psql`로 들어갈 수 있다
+- GUI로는 `pgAdmin 4` 같은 도구를 쓸 수 있다
+- VS Code도 DB 접속 도구 역할을 할 수 있다
+
+즉:
+
+```text
+DB는 백엔드 코드 안에만 있는 것이 아니라,
+별도 프로그램(서버)로 실행되고 있고
+우리는 터미널/GUI/VS Code로 그 DB에 접속해서 볼 수 있다
+```
+
+라고 이해하면 됩니다.
+
 ### application.yml은 뭐 하는 파일인가
 
 `application.yml`은 Spring Boot 설정 파일입니다.
@@ -1096,7 +1295,6 @@ findByShopNameContaining(String keyword)
 
 - Maven과 PostgreSQL은 설치 완료 상태입니다.
 - `backend/` 프로젝트 생성도 끝났습니다.
-- 다음부터는 새 `backend-02`, `backend-03` 문서를 늘리기보다, 실제 구현이 진행되는 동안 이 문서를 계속 갱신해도 됩니다.
 - 지금 가장 중요한 다음 액션은 문서 추가가 아니라 `RN auth 연동` 또는 `post API 구현`입니다.
 
 ## 핵심 기준

@@ -8,6 +8,8 @@ Git에는 올리지 않기 위해 `.gitignore`에 `codex/`를 추가했습니다
 
 - 코드를 바로 바꾸기 전에 먼저 설명합니다.
 - RN/Expo 개념, 폴더 역할, 실행 방법을 이곳에 Markdown으로 정리합니다.
+- 커밋 메시지는 항상 한글로 추천합니다.
+- 커밋 메시지를 추천할 때는 현재 변경 감지된 파일과 관련 작업 Markdown을 함께 보고 판단합니다.
 - RN/앱 구현 문서는 기존 번호 step 시리즈를 유지합니다.
 - 백엔드 구현 문서는 별도 시리즈로 분리하고 `backend-01-...` 형식으로 기록합니다.
 - 디자인 적용은 기본 예제를 띄워보고 구조를 이해한 뒤에 진행합니다.
@@ -94,6 +96,8 @@ Git에는 올리지 않기 위해 `.gitignore`에 `codex/`를 추가했습니다
 - 예: `backend-01-spring-project-init.md`, `backend-02-postgresql-setup.md`
 - 백엔드 문서의 비교 섹션 제목은 `## Express/Next API 개발자 기준으로 보면`으로 통일합니다.
 - 백엔드 문서에서는 React 화면 개발 비유보다 `route handler`, `middleware`, `service`, `repository`, `ORM`, `schema validation`, `JWT` 흐름 비교를 우선합니다.
+- 다만 작업 중심이 백엔드 API 구현 자체보다 프론트 화면/UX 변경 쪽으로 넘어가면, 그 시점부터는 다시 기존 `48-step-...` 같은 Step 시리즈로 이어갑니다.
+- 즉 `backend-xx`는 백엔드 구현이나 auth/post/chat API 연동 축이 메인일 때 쓰고, `step-xx`는 프론트 작업 비중이 더 클 때 사용합니다.
 
 ## API 연동 방식
 
