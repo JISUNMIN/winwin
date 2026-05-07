@@ -8,12 +8,17 @@ Git에는 올리지 않기 위해 `.gitignore`에 `codex/`를 추가했습니다
 
 - 코드를 바로 바꾸기 전에 먼저 설명합니다.
 - RN/Expo 개념, 폴더 역할, 실행 방법을 이곳에 Markdown으로 정리합니다.
+- RN/앱 구현 문서는 기존 번호 step 시리즈를 유지합니다.
+- 백엔드 구현 문서는 별도 시리즈로 분리하고 `backend-01-...` 형식으로 기록합니다.
 - 디자인 적용은 기본 예제를 띄워보고 구조를 이해한 뒤에 진행합니다.
 - Step 문서에는 React 개발자가 RN을 이해하기 쉬운 설명을 짧게 적습니다.
   예: `View = div 비슷한 레이아웃 박스`, `Pressable = button 비슷한 인터랙션 컴포넌트`
 - Step 문서에는 반드시 `## React 개발자 기준으로 보면` 섹션을 넣습니다.
   여기에는 이번 단계가 웹 React 기준으로 어떤 패턴과 비슷한지 3~6줄 정도로 적습니다.
   예: `AuthProvider`, `protected route`, `localStorage`, `debounce 없는 submit 검색`, `optimistic UI` 같은 비교
+- 백엔드 문서에는 `## Express/Next API 개발자 기준으로 보면` 섹션을 넣습니다.
+  여기에는 이번 단계가 `Express route`, `middleware`, `service layer`, `ORM model`, `request validation`, `JWT auth` 같은 기준에서 어떻게 대응되는지 3~6줄 정도로 적습니다.
+  프론트 Step 문서처럼 React UI 관점으로 비교하지 않고, API 서버 구현 관점으로 비교합니다.
 - Step 문서에는 핵심 로직을 2~4줄 정도로라도 적습니다.
   예: 어떤 상태가 어디에 저장되는지, 어떤 함수가 화면을 갱신하는지
 - 구현 기록만 적지 않고, 왜 그렇게 동작하는지도 한 줄씩 설명합니다.
@@ -74,9 +79,28 @@ Git에는 올리지 않기 위해 `.gitignore`에 `codex/`를 추가했습니다
 - [43. Step 37 Mock 인증 상태 유지](./43-step-37-mock-auth-persistence.md)
 - [44. Step 38 마지막 진입 화면 복구](./44-step-38-last-route-restore.md)
 - [45. Step 39 보호 화면 공용화와 역할 변경 경로 정리](./45-step-39-protected-screen-and-route-cleanup.md)
+- [46. WinWin 프로젝트 목표 정리](./46-step-40-auth-cta-polish.md)
+- [47. 백엔드 API와 DB 시작 순서](./47-step-41-backend-api-db-kickoff.md)
+- [Backend 01. Spring 프로젝트 시작 준비](./backend-01-spring-project-init.md)
+- [Backend 02. Auth API 첫 구현 요약](./backend-02-auth-api-first-pass.md)
 - [RN 태그 정리 for React 개발자](./rn-tags-for-react-developers.md)
 - [개발 중 저장, 새로고침, 재시작, 빌드 차이](./dev-server-refresh-build.md)
 - [진행 기록과 다음 할 일](./progress-and-next-steps.md)
+
+## 백엔드 문서 규칙
+
+- `47-step-41-backend-api-db-kickoff.md`는 백엔드 전환점 문서로 유지합니다.
+- 이후 실제 백엔드 작업 기록은 `backend-01-...`, `backend-02-...` 형식으로 분리합니다.
+- 예: `backend-01-spring-project-init.md`, `backend-02-postgresql-setup.md`
+- 백엔드 문서의 비교 섹션 제목은 `## Express/Next API 개발자 기준으로 보면`으로 통일합니다.
+- 백엔드 문서에서는 React 화면 개발 비유보다 `route handler`, `middleware`, `service`, `repository`, `ORM`, `schema validation`, `JWT` 흐름 비교를 우선합니다.
+
+## API 연동 방식
+
+- API는 한 번에 전부 만든 뒤 한꺼번에 붙이지 않습니다.
+- 기능 단위로 API를 만들고, 같은 기능 단위로 RN 화면에 바로 연결합니다.
+- 기본 순서는 `auth -> post -> chat` 흐름으로 진행합니다.
+- 즉 `백엔드 구현` 문서와 `프론트 연동` 문서를 짝처럼 이어가며 진행합니다.
 
 ## 앞으로의 정리 방식
 

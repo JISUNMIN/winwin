@@ -1,43 +1,53 @@
 # Session End Summary
 
 ## Date
-- 2026-04-29
+- 2026-05-07
 
 ## Workspace
 - C:\Users\zentropy\Music\WinWin\WinWin
 
 ## Done
-- Persisted mock auth role with `AsyncStorage` in `src/auth/mock-auth.tsx` and delayed guards until auth restore is ready.
-- Added last-route restore in `src/auth/auth-route-persistence.tsx` so restart returns to the last accessible screen, excluding `/auth`.
-- Added automatic cleanup when role changes make the current route invalid, redirecting to the default route for that role and updating stored last-route state.
-- Introduced `src/components/winwin/ProtectedRoleScreen.tsx` to unify loading vs denied guard UI across customer/partner protected screens.
-- Updated Codex notes for Steps 43-45 and refreshed `codex/README.md` and `codex/progress-and-next-steps.md`.
-- Rolled back the draft auth CTA polish work; that idea is tracked only as a future item in `codex/progress-and-next-steps.md`.
+- Installed and verified the local Java backend toolchain: Java 17, Maven, PostgreSQL 16, and the `winwin` database.
+- Created the `backend/` Spring Boot project with Maven Wrapper, PostgreSQL config, and initial `/api/health` endpoint.
+- Implemented first-pass auth API: `POST /api/auth/signup`, `POST /api/auth/login`, and `GET /api/users/me`.
+- Added JWT-based auth flow with `SecurityConfig`, `JwtAuthenticationFilter`, `JwtTokenProvider`, `UserAccount`, and `UserRepository`.
+- Verified the backend with `.\mvnw.cmd test`, health check, and a full signup -> login -> users/me API flow.
+- Expanded backend learning docs for a beginner: merged the backend folder guide into [codex/backend-01-spring-project-init.md](/abs/path/C:/Users/zentropy/Music/WinWin/WinWin/codex/backend-01-spring-project-init.md) and deepened [codex/backend-02-auth-api-first-pass.md](/abs/path/C:/Users/zentropy/Music/WinWin/WinWin/codex/backend-02-auth-api-first-pass.md) with file roles, request flow, naming rules, annotations, and Spring Data JPA repository method notes.
+- Updated [codex/README.md](/abs/path/C:/Users/zentropy/Music/WinWin/WinWin/codex/README.md) to reflect the current backend document structure.
 
 ## Files
-- src/auth/auth-route-persistence.tsx
-- src/auth/mock-auth.tsx
-- src/app/_layout.tsx
-- src/app/auth/index.tsx
-- src/app/chat/[id].tsx
-- src/app/partner/index.tsx
-- src/app/partner/chat/[id].tsx
-- src/app/partner/post/index.tsx
-- src/app/partner/post/new.tsx
-- src/app/partner/post/created.tsx
-- src/app/partner/post/[id]/edit.tsx
-- src/components/winwin/ProtectedRoleScreen.tsx
-- src/hooks/use-role-guard.ts
-- codex/43-step-37-mock-auth-persistence.md
-- codex/44-step-38-last-route-restore.md
-- codex/45-step-39-protected-screen-and-route-cleanup.md
+- backend/pom.xml
+- backend/mvnw
+- backend/mvnw.cmd
+- backend/.mvn/wrapper/maven-wrapper.properties
+- backend/src/main/resources/application.yml
+- backend/src/main/java/com/winwin/backend/api/HealthController.java
+- backend/src/main/java/com/winwin/backend/auth/AuthController.java
+- backend/src/main/java/com/winwin/backend/auth/AuthService.java
+- backend/src/main/java/com/winwin/backend/auth/dto/AuthTokenResponse.java
+- backend/src/main/java/com/winwin/backend/auth/dto/LoginRequest.java
+- backend/src/main/java/com/winwin/backend/auth/dto/MeResponse.java
+- backend/src/main/java/com/winwin/backend/auth/dto/SignupRequest.java
+- backend/src/main/java/com/winwin/backend/config/SecurityConfig.java
+- backend/src/main/java/com/winwin/backend/security/AuthenticatedUser.java
+- backend/src/main/java/com/winwin/backend/security/JwtAuthenticationFilter.java
+- backend/src/main/java/com/winwin/backend/security/JwtTokenProvider.java
+- backend/src/main/java/com/winwin/backend/user/UserAccount.java
+- backend/src/main/java/com/winwin/backend/user/UserController.java
+- backend/src/main/java/com/winwin/backend/user/UserRepository.java
+- backend/src/main/java/com/winwin/backend/user/UserRole.java
 - codex/README.md
+- codex/backend-01-spring-project-init.md
+- codex/backend-02-auth-api-first-pass.md
 - codex/progress-and-next-steps.md
+- codex/SESSION_END_SUMMARY.md
 
 ## Verification
-- Ran `npx.cmd tsc --noEmit --pretty false`; TypeScript check passed after each auth/guard refactor and after the rollback.
-- Did not run a full Expo manual regression pass across all auth flows in browser/device during this wrap-up.
+- Ran `.\mvnw.cmd test` in `backend/` successfully.
+- Verified `GET /api/health` returned `200 OK`.
+- Verified `POST /api/auth/signup`, `POST /api/auth/login`, and `GET /api/users/me` with a real local PostgreSQL-backed flow.
 
 ## Next Steps
-- If needed later, revisit auth CTA polish: guest-specific start cards on home, clearer dev-only role-switch labeling, and softer `/auth` copy.
-- Manually retest role restore, route restore, and role-change redirect behavior on both web and mobile flows.
+- Decide whether the next step should be RN mock auth -> real auth API integration or `post` domain API implementation.
+- If continuing backend first, add post entities and APIs: list, detail, partner create, edit, and status update.
+- If continuing frontend integration first, add RN client functions for login/signup/me and replace the current mock auth flow.
