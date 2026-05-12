@@ -5,6 +5,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import {
+  getPartnerPosts as getPartnerPostsApi,
+  mapPostResponseToMatching,
+  mapPostStatusToApi,
+  updatePartnerPostStatus as updatePartnerPostStatusApi,
+} from '@/api/posts';
+import { useAuth } from '@/auth/mock-auth';
 import { ProtectedRoleScreen } from '@/components/winwin/ProtectedRoleScreen';
 import { consumePostFeedbackMessage } from '@/data/post-feedback';
 import {
@@ -49,19 +56,52 @@ export default function ShopPostManageScreen() {
 
 function ShopPostManageContent() {
   const isFocused = useIsFocused();
+  const { accessToken, authSource } = useAuth();
   const [postedMatchings, setPostedMatchings] = useState(() => getPostedMatchings());
   const [selectedFilter, setSelectedFilter] = useState<FilterKey>('all');
   const [selectedSort, setSelectedSort] = useState<SortKey>('latest');
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    if (isFocused) {
-      setPostedMatchings(getPostedMatchings());
-      setFeedbackMessage(consumePostFeedbackMessage());
+    if (!isFocused) {
+      return;
     }
-  }, [isFocused]);
+
+    let isMounted = true;
+
+    const loadPosts = async () => {
+      setFeedbackMessage(consumePostFeedbackMessage());
+      setLoadError(null);
+
+      if (authSource === 'api' && accessToken) {
+        try {
+          const response = await getPartnerPostsApi(accessToken);
+
+          if (isMounted) {
+            setPostedMatchings(response.map(mapPostResponseToMatching));
+          }
+          return;
+        } catch {
+          if (isMounted) {
+            setLoadError('서버 공고 목록을 불러오지 못해 임시 mock 목록을 보여주고 있어요.');
+          }
+        }
+      }
+
+      if (isMounted) {
+        setPostedMatchings(getPostedMatchings());
+      }
+    };
+
+    loadPosts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [accessToken, authSource, isFocused]);
 
   useEffect(() => {
     if (!feedbackMessage) {
@@ -124,7 +164,28 @@ function ShopPostManageContent() {
     return items;
   }, [filteredMatchings, selectedSort]);
 
-  const togglePostStatus = (id: string, nextStatus: MatchingPostStatus) => {
+  const togglePostStatus = async (id: string, nextStatus: MatchingPostStatus) => {
+    if (authSource === 'api' && accessToken) {
+      try {
+        const updatedPost = await updatePartnerPostStatusApi(
+          accessToken,
+          Number(id),
+          mapPostStatusToApi(nextStatus),
+        );
+
+        setPostedMatchings((current) =>
+          current.map((matching) =>
+            matching.id === id ? mapPostResponseToMatching(updatedPost) : matching,
+          ),
+        );
+        setLoadError(null);
+        return;
+      } catch {
+        setLoadError('공고 상태를 서버에 반영하지 못했어요. 잠시 후 다시 시도해 주세요.');
+        return;
+      }
+    }
+
     updatePostedMatchingStatus(id, nextStatus);
     setPostedMatchings(getPostedMatchings());
   };
@@ -159,6 +220,13 @@ function ShopPostManageContent() {
           <View style={styles.feedbackBanner}>
             <Ionicons name="checkmark-circle" size={18} color="#15803D" />
             <Text style={styles.feedbackBannerText}>{feedbackMessage}</Text>
+          </View>
+        ) : null}
+
+        {loadError ? (
+          <View style={styles.errorBanner}>
+            <Ionicons name="alert-circle" size={18} color="#B45309" />
+            <Text style={styles.errorBannerText}>{loadError}</Text>
           </View>
         ) : null}
 
@@ -406,6 +474,24 @@ const styles = StyleSheet.create({
   feedbackBannerText: {
     flex: 1,
     color: '#166534',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  errorBanner: {
+    marginBottom: 14,
+    borderRadius: 14,
+    backgroundColor: '#FFF7ED',
+    borderWidth: 1,
+    borderColor: '#FED7AA',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  errorBannerText: {
+    flex: 1,
+    color: '#B45309',
     fontSize: 13,
     fontWeight: '800',
   },

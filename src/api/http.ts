@@ -30,6 +30,10 @@ export class ApiError extends Error {
   }
 }
 
+type UnauthorizedBehavior = 'notify' | 'ignore';
+
+let unauthorizedHandler: ((error: ApiError) => void | Promise<void>) | null = null;
+
 function normalizeBaseUrl(url: string) {
   return url.endsWith('/') ? url.slice(0, -1) : url;
 }
@@ -59,6 +63,10 @@ function buildUrl(path: string) {
   return `${getApiBaseUrl()}${normalizedPath}`;
 }
 
+export function setUnauthorizedHandler(handler: ((error: ApiError) => void | Promise<void>) | null) {
+  unauthorizedHandler = handler;
+}
+
 async function parseErrorResponse(response: Response): Promise<ApiErrorResponse> {
   try {
     return (await response.json()) as ApiErrorResponse;
@@ -75,6 +83,9 @@ async function parseErrorResponse(response: Response): Promise<ApiErrorResponse>
 }
 
 export async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
+  const unauthorizedBehavior =
+    (init as RequestInit & { unauthorizedBehavior?: UnauthorizedBehavior } | undefined)
+      ?.unauthorizedBehavior ?? 'ignore';
   const headers = new Headers(init?.headers);
 
   headers.set('Accept', 'application/json');
@@ -89,7 +100,13 @@ export async function requestJson<T>(path: string, init?: RequestInit): Promise<
   });
 
   if (!response.ok) {
-    throw new ApiError(await parseErrorResponse(response));
+    const error = new ApiError(await parseErrorResponse(response));
+
+    if (error.status === 401 && unauthorizedBehavior === 'notify') {
+      await unauthorizedHandler?.(error);
+    }
+
+    throw error;
   }
 
   if (response.status === 204) {

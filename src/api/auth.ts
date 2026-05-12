@@ -1,4 +1,4 @@
-import { requestJson } from '@/api/http';
+import { requestJson, type ApiError } from '@/api/http';
 
 export type AuthApiRole = 'CUSTOMER' | 'PARTNER';
 
@@ -50,4 +50,14 @@ export function getMe(accessToken: string) {
       Authorization: `Bearer ${accessToken}`,
     },
   });
+}
+
+export function getMeWithUnauthorizedHandling(accessToken: string) {
+  return requestJson<MeResponse>('/api/users/me', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    unauthorizedBehavior: 'notify',
+  } as RequestInit & { unauthorizedBehavior: 'notify' });
 }

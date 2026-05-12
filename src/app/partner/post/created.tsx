@@ -16,6 +16,7 @@ export default function PartnerPostCreatedScreen() {
     requirementCount?: string;
     dateCount?: string;
     deposit?: string;
+    source?: string;
   }>();
 
   return (
@@ -34,7 +35,9 @@ export default function PartnerPostCreatedScreen() {
 
           <Text style={styles.title}>공고 등록 완료</Text>
           <Text style={styles.subtitle}>
-            기본 공고 등록 mock 흐름이 완료되었습니다. 나중에는 실제 목록 데이터와 연결할 수 있어요.
+            {params.source === 'api'
+              ? '실제 post API에 공고가 저장되었습니다. 이제 목록 화면에서도 서버 기준으로 다시 불러올 수 있어요.'
+              : '기본 공고 등록 mock 흐름이 완료되었습니다. 나중에는 실제 목록 데이터와 연결할 수 있어요.'}
           </Text>
 
           <View style={styles.summaryCard}>

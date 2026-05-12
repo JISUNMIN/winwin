@@ -36,7 +36,7 @@ public class SecurityConfig {
                 exception.authenticationEntryPoint(restAuthenticationEntryPoint))
         .authorizeHttpRequests(
             auth ->
-                auth.requestMatchers("/api/health", "/api/auth/**").permitAll()
+                auth.requestMatchers("/api/health", "/api/auth/**", "/api/posts").permitAll()
                     .anyRequest()
                     .authenticated())
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

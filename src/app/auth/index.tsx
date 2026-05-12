@@ -4,6 +4,8 @@ import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -157,216 +159,224 @@ export default function AuthScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={styles.header}>
-          <View style={styles.iconBox}>
-            <Ionicons name="shield-checkmark-outline" size={34} color="#6D5DFB" />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.keyboardArea}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag">
+          <View style={styles.header}>
+            <View style={styles.iconBox}>
+              <Ionicons name="shield-checkmark-outline" size={34} color="#6D5DFB" />
+            </View>
+            <Text style={styles.title}>{title}</Text>
+            <Text style={styles.subtitle}>{subtitle}</Text>
           </View>
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.subtitle}>{subtitle}</Text>
-        </View>
 
-        <View style={styles.currentCard}>
-          <Text style={styles.currentLabel}>현재 상태</Text>
-          <Text style={styles.currentValue}>
-            {isLoggedIn ? `${roleLabels[role]} 로그인` : '게스트 모드'}
-          </Text>
-          <Text style={styles.currentDescription}>
-            {isLoggedIn
-              ? `${authSource === 'api' ? '실제 API 세션' : '개발용 mock 세션'}${
-                  user?.email ? ` · ${user.email}` : ''
-                }`
-              : '게스트는 홈과 상세는 볼 수 있지만, 고객 액션과 파트너 화면은 제한됩니다.'}
-          </Text>
-        </View>
+          <View style={styles.currentCard}>
+            <Text style={styles.currentLabel}>현재 상태</Text>
+            <Text style={styles.currentValue}>
+              {isLoggedIn ? `${roleLabels[role]} 로그인` : '게스트 모드'}
+            </Text>
+            <Text style={styles.currentDescription}>
+              {isLoggedIn
+                ? `${authSource === 'api' ? '실제 API 세션' : '개발용 mock 세션'}${
+                    user?.email ? ` · ${user.email}` : ''
+                  }`
+                : '게스트는 홈과 상세는 볼 수 있지만, 고객 액션과 파트너 화면은 제한됩니다.'}
+            </Text>
+          </View>
 
-        <View style={styles.modeRow}>
-          {(['login', 'signup'] as const).map((nextMode) => (
-            <Pressable
-              accessibilityRole="button"
-              key={nextMode}
-              onPress={() => {
-                clearErrors();
-                setMode(nextMode);
-              }}
-              style={[styles.modeButton, mode === nextMode && styles.modeButtonActive]}>
-              <Text
-                style={[styles.modeButtonText, mode === nextMode && styles.modeButtonTextActive]}>
-                {authModeLabels[nextMode]}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
-        <View style={styles.formCard}>
-          <Text style={styles.formTitle}>
-            {mode === 'login' ? '계정으로 로그인' : '새 계정 만들기'}
-          </Text>
-          <Text style={styles.formDescription}>
-            {mode === 'login'
-              ? '이메일과 비밀번호로 실제 auth API를 호출합니다.'
-              : '회원가입 성공 시 access token을 저장하고 바로 로그인 상태로 전환합니다.'}
-          </Text>
-
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>이메일</Text>
-            <TextInput
-              autoCapitalize="none"
-              autoComplete="email"
-              keyboardType="email-address"
-              onChangeText={(value) => {
-                setEmail(value);
-                if (submitError || fieldErrors.email) {
+          <View style={styles.modeRow}>
+            {(['login', 'signup'] as const).map((nextMode) => (
+              <Pressable
+                accessibilityRole="button"
+                key={nextMode}
+                onPress={() => {
                   clearErrors();
-                }
-              }}
-              placeholder="partner@example.com"
-              placeholderTextColor="#8A8F98"
-              style={[styles.input, fieldErrors.email && styles.inputError]}
-              value={email}
-            />
-            {fieldErrors.email ? <Text style={styles.fieldErrorText}>{fieldErrors.email}</Text> : null}
+                  setMode(nextMode);
+                }}
+                style={[styles.modeButton, mode === nextMode && styles.modeButtonActive]}>
+                <Text
+                  style={[styles.modeButtonText, mode === nextMode && styles.modeButtonTextActive]}>
+                  {authModeLabels[nextMode]}
+                </Text>
+              </Pressable>
+            ))}
           </View>
 
-          {mode === 'signup' && (
+          <View style={styles.formCard}>
+            <Text style={styles.formTitle}>
+              {mode === 'login' ? '계정으로 로그인' : '새 계정 만들기'}
+            </Text>
+            <Text style={styles.formDescription}>
+              {mode === 'login'
+                ? '이메일과 비밀번호로 실제 auth API를 호출합니다.'
+                : '회원가입 성공 시 access token을 저장하고 바로 로그인 상태로 전환합니다.'}
+            </Text>
+
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>이름</Text>
+              <Text style={styles.fieldLabel}>이메일</Text>
               <TextInput
+                autoCapitalize="none"
+                autoComplete="email"
+                keyboardType="email-address"
                 onChangeText={(value) => {
-                  setName(value);
-                  if (submitError || fieldErrors.name) {
+                  setEmail(value);
+                  if (submitError || fieldErrors.email) {
                     clearErrors();
                   }
                 }}
-                placeholder="Partner One"
+                placeholder="partner@example.com"
                 placeholderTextColor="#8A8F98"
-                style={[styles.input, fieldErrors.name && styles.inputError]}
-                value={name}
+                style={[styles.input, fieldErrors.email && styles.inputError]}
+                value={email}
               />
-              {fieldErrors.name ? <Text style={styles.fieldErrorText}>{fieldErrors.name}</Text> : null}
+              {fieldErrors.email ? <Text style={styles.fieldErrorText}>{fieldErrors.email}</Text> : null}
             </View>
-          )}
 
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>비밀번호</Text>
-            <TextInput
-              autoCapitalize="none"
-              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-              onChangeText={(value) => {
-                setPassword(value);
-                if (submitError || fieldErrors.password) {
-                  clearErrors();
-                }
-              }}
-              placeholder="8자 이상 입력"
-              placeholderTextColor="#8A8F98"
-              secureTextEntry
-              style={[styles.input, fieldErrors.password && styles.inputError]}
-              value={password}
-            />
-            {fieldErrors.password ? (
-              <Text style={styles.fieldErrorText}>{fieldErrors.password}</Text>
-            ) : null}
-          </View>
-
-          {mode === 'signup' && (
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>계정 역할</Text>
-              <View style={styles.signupRoleList}>
-                {signupRoleOptions.map((option) => (
-                  <Pressable
-                    accessibilityRole="button"
-                    key={option.role}
-                    onPress={() => {
-                      setSignupRole(option.role);
-                      if (submitError || fieldErrors.role) {
-                        clearErrors();
-                      }
-                    }}
-                    style={[
-                      styles.signupRoleCard,
-                      signupRole === option.role && styles.signupRoleCardActive,
-                    ]}>
-                    <Text style={styles.signupRoleTitle}>{option.title}</Text>
-                    <Text style={styles.signupRoleDescription}>{option.description}</Text>
-                  </Pressable>
-                ))}
-              </View>
-              {fieldErrors.role ? <Text style={styles.fieldErrorText}>{fieldErrors.role}</Text> : null}
+              <Text style={styles.fieldLabel}>비밀번호</Text>
+              <TextInput
+                autoCapitalize="none"
+                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                onChangeText={(value) => {
+                  setPassword(value);
+                  if (submitError || fieldErrors.password) {
+                    clearErrors();
+                  }
+                }}
+                placeholder="8자 이상 입력"
+                placeholderTextColor="#8A8F98"
+                secureTextEntry
+                style={[styles.input, fieldErrors.password && styles.inputError]}
+                value={password}
+              />
+              {fieldErrors.password ? (
+                <Text style={styles.fieldErrorText}>{fieldErrors.password}</Text>
+              ) : null}
             </View>
-          )}
 
-          {submitError ? <Text style={styles.submitErrorText}>{submitError}</Text> : null}
-
-          <Pressable
-            accessibilityRole="button"
-            disabled={isSubmitting}
-            onPress={handleSubmit}
-            style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}>
-            {isSubmitting ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
-              <Text style={styles.submitButtonText}>
-                {mode === 'login' ? '로그인하기' : '회원가입 후 시작하기'}
-              </Text>
+            {mode === 'signup' && (
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>이름</Text>
+                <TextInput
+                  onChangeText={(value) => {
+                    setName(value);
+                    if (submitError || fieldErrors.name) {
+                      clearErrors();
+                    }
+                  }}
+                  placeholder="Partner One"
+                  placeholderTextColor="#8A8F98"
+                  style={[styles.input, fieldErrors.name && styles.inputError]}
+                  value={name}
+                />
+                {fieldErrors.name ? <Text style={styles.fieldErrorText}>{fieldErrors.name}</Text> : null}
+              </View>
             )}
-          </Pressable>
-        </View>
 
-        <View style={styles.helperCard}>
-          <Text style={styles.helperTitle}>게스트 또는 빠른 전환</Text>
-          <Text style={styles.helperDescription}>
-            실제 auth API 연결과 별개로, 현재 화면 흐름 확인용 빠른 전환도 계속 사용할 수 있어요.
-          </Text>
+            {mode === 'signup' && (
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>계정 역할</Text>
+                <View style={styles.signupRoleList}>
+                  {signupRoleOptions.map((option) => (
+                    <Pressable
+                      accessibilityRole="button"
+                      key={option.role}
+                      onPress={() => {
+                        setSignupRole(option.role);
+                        if (submitError || fieldErrors.role) {
+                          clearErrors();
+                        }
+                      }}
+                      style={[
+                        styles.signupRoleCard,
+                        signupRole === option.role && styles.signupRoleCardActive,
+                      ]}>
+                      <Text style={styles.signupRoleTitle}>{option.title}</Text>
+                      <Text style={styles.signupRoleDescription}>{option.description}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+                {fieldErrors.role ? <Text style={styles.fieldErrorText}>{fieldErrors.role}</Text> : null}
+              </View>
+            )}
 
-          <View style={styles.quickActionList}>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => handleSelectRole('guest')}
-              style={[styles.quickActionButton, role === 'guest' && styles.quickActionButtonActive]}>
-              <Text
-                style={[
-                  styles.quickActionButtonText,
-                  role === 'guest' && styles.quickActionButtonTextActive,
-                ]}>
-                게스트
-              </Text>
-            </Pressable>
-
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => handleSelectRole('customer')}
-              style={[
-                styles.quickActionButton,
-                role === 'customer' && styles.quickActionButtonActive,
-              ]}>
-              <Text
-                style={[
-                  styles.quickActionButtonText,
-                  role === 'customer' && styles.quickActionButtonTextActive,
-                ]}>
-                고객 mock
-              </Text>
-            </Pressable>
+            {submitError ? <Text style={styles.submitErrorText}>{submitError}</Text> : null}
 
             <Pressable
               accessibilityRole="button"
-              onPress={() => handleSelectRole('partner')}
-              style={[
-                styles.quickActionButton,
-                role === 'partner' && styles.quickActionButtonActive,
-              ]}>
-              <Text
-                style={[
-                  styles.quickActionButtonText,
-                  role === 'partner' && styles.quickActionButtonTextActive,
-                ]}>
-                파트너 mock
-              </Text>
+              disabled={isSubmitting}
+              onPress={handleSubmit}
+              style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}>
+              {isSubmitting ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <Text style={styles.submitButtonText}>
+                  {mode === 'login' ? '로그인하기' : '회원가입 후 시작하기'}
+                </Text>
+              )}
             </Pressable>
           </View>
-        </View>
-      </ScrollView>
+
+          <View style={styles.helperCard}>
+            <Text style={styles.helperTitle}>게스트 또는 빠른 전환</Text>
+            <Text style={styles.helperDescription}>
+              실제 auth API 연결과 별개로, 현재 화면 흐름 확인용 빠른 전환도 계속 사용할 수 있어요.
+            </Text>
+
+            <View style={styles.quickActionList}>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => handleSelectRole('guest')}
+                style={[styles.quickActionButton, role === 'guest' && styles.quickActionButtonActive]}>
+                <Text
+                  style={[
+                    styles.quickActionButtonText,
+                    role === 'guest' && styles.quickActionButtonTextActive,
+                  ]}>
+                  게스트
+                </Text>
+              </Pressable>
+
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => handleSelectRole('customer')}
+                style={[
+                  styles.quickActionButton,
+                  role === 'customer' && styles.quickActionButtonActive,
+                ]}>
+                <Text
+                  style={[
+                    styles.quickActionButtonText,
+                    role === 'customer' && styles.quickActionButtonTextActive,
+                  ]}>
+                  고객 mock
+                </Text>
+              </Pressable>
+
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => handleSelectRole('partner')}
+                style={[
+                  styles.quickActionButton,
+                  role === 'partner' && styles.quickActionButtonActive,
+                ]}>
+                <Text
+                  style={[
+                    styles.quickActionButtonText,
+                    role === 'partner' && styles.quickActionButtonTextActive,
+                  ]}>
+                  파트너 mock
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -376,10 +386,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F7F8FA',
   },
+  keyboardArea: {
+    flex: 1,
+    backgroundColor: '#F7F8FA',
+  },
+  scrollView: {
+    flex: 1,
+    backgroundColor: '#F7F8FA',
+  },
   content: {
+    flexGrow: 1,
     paddingHorizontal: 20,
     paddingTop: 28,
     paddingBottom: 36,
+    backgroundColor: '#F7F8FA',
   },
   header: {
     alignItems: 'center',

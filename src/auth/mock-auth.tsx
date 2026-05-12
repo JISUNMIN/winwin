@@ -11,11 +11,12 @@ import {
 
 import {
   getMe,
+  getMeWithUnauthorizedHandling,
   type AuthApiRole,
   type AuthTokenResponse,
   type MeResponse,
 } from '@/api/auth';
-import { ApiError } from '@/api/http';
+import { ApiError, setUnauthorizedHandler } from '@/api/http';
 
 export type AppRole = 'guest' | 'customer' | 'partner';
 export type AuthenticatedRole = Exclude<AppRole, 'guest'>;
@@ -244,6 +245,28 @@ export function MockAuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  useEffect(() => {
+    setUnauthorizedHandler(async () => {
+      setSession((currentSession) => {
+        if (currentSession?.source !== 'api') {
+          return currentSession;
+        }
+
+        return null;
+      });
+
+      await AsyncStorage.removeItem(AUTH_STORAGE_KEY).catch(() => {
+        // Global 401 cleanup should still proceed in memory even if persistence removal fails.
+      });
+
+      router.replace('/auth' as never);
+    });
+
+    return () => {
+      setUnauthorizedHandler(null);
+    };
+  }, []);
+
   const role = session?.role ?? 'guest';
   const user = session?.user ?? null;
   const accessToken = session?.accessToken ?? null;
@@ -314,6 +337,16 @@ export function MockAuthProvider({ children }: { children: ReactNode }) {
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useRequireAuthMe() {
+  const { accessToken } = useAuth();
+
+  if (!accessToken) {
+    throw new Error('useRequireAuthMe requires an authenticated access token');
+  }
+
+  return () => getMeWithUnauthorizedHandling(accessToken);
 }
 
 export function useAuth() {

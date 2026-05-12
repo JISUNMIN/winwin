@@ -14,7 +14,7 @@ import { formatFullLocationText } from '@/utils/location-text';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { role, isLoggedIn, openAuth, signInAs, signOut } = useAuth();
+  const { role, isLoggedIn, authSource, user, openAuth, signInAs, signOut } = useAuth();
   const isFocused = useIsFocused();
   const [searchInput, setSearchInput] = useState('');
   const [query, setQuery] = useState('');
@@ -24,6 +24,7 @@ export default function HomeScreen() {
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
   const [showPartnerMenu, setShowPartnerMenu] = useState(false);
+  const [showDevRoleActions, setShowDevRoleActions] = useState(false);
 
   const handleFetchLocation = async () => {
     setIsFetchingLocation(true);
@@ -112,75 +113,117 @@ export default function HomeScreen() {
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
-        onScrollBeginDrag={() => setShowPartnerMenu(false)}>
+        onScrollBeginDrag={() => {
+          setShowPartnerMenu(false);
+          setShowDevRoleActions(false);
+        }}>
         <View style={styles.accountBar}>
           <View>
             <Text style={styles.accountLabel}>현재 역할</Text>
             <Text style={styles.accountValue}>
               {isLoggedIn ? `${roleLabels[role]} 로그인` : '게스트'}
             </Text>
+            <Text style={styles.accountDescription}>
+              {isLoggedIn
+                ? authSource === 'api'
+                  ? user?.email ?? '실제 API 계정으로 로그인 중'
+                  : '개발용 mock 세션으로 진입 중'
+                : '로그인하면 요청한 역할 화면으로 바로 이동할 수 있어요.'}
+            </Text>
           </View>
 
           <View style={styles.accountActions}>
             <Pressable
               accessibilityRole="button"
-              onPress={() => openAuth()}
+              onPress={() => {
+                setShowDevRoleActions(false);
+                if (isLoggedIn) {
+                  signOut();
+                  return;
+                }
+
+                openAuth();
+              }}
               style={styles.accountButton}>
-              <Text style={styles.accountButtonText}>로그인</Text>
+              <Text style={styles.accountButtonText}>{isLoggedIn ? '로그아웃' : '로그인'}</Text>
             </Pressable>
 
-            <View style={styles.roleQuickActions}>
-              <Pressable
-                accessibilityRole="button"
-                onPress={signOut}
-                style={[styles.roleQuickButton, role === 'guest' && styles.roleQuickButtonActive]}>
-                <Text
-                  style={[
-                    styles.roleQuickButtonText,
-                    role === 'guest' && styles.roleQuickButtonTextActive,
-                  ]}>
-                  게스트
-                </Text>
-              </Pressable>
-
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => signInAs('customer')}
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                setShowPartnerMenu(false);
+                setShowDevRoleActions((current) => !current);
+              }}
+              style={[
+                styles.devToggleButton,
+                showDevRoleActions && styles.devToggleButtonActive,
+              ]}>
+              <Text
                 style={[
-                  styles.roleQuickButton,
-                  role === 'customer' && styles.roleQuickButtonActive,
+                  styles.devToggleButtonText,
+                  showDevRoleActions && styles.devToggleButtonTextActive,
                 ]}>
-                <Text
-                  style={[
-                    styles.roleQuickButtonText,
-                    role === 'customer' && styles.roleQuickButtonTextActive,
-                  ]}>
-                  고객
-                </Text>
-              </Pressable>
+                개발용 전환
+              </Text>
+            </Pressable>
 
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => signInAs('partner')}
-                style={[
-                  styles.roleQuickButton,
-                  role === 'partner' && styles.roleQuickButtonActive,
-                ]}>
-                <Text
+            {showDevRoleActions ? (
+              <View style={styles.roleQuickActions}>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={signOut}
+                  style={[styles.roleQuickButton, role === 'guest' && styles.roleQuickButtonActive]}>
+                  <Text
+                    style={[
+                      styles.roleQuickButtonText,
+                      role === 'guest' && styles.roleQuickButtonTextActive,
+                    ]}>
+                    게스트
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => signInAs('customer')}
                   style={[
-                    styles.roleQuickButtonText,
-                    role === 'partner' && styles.roleQuickButtonTextActive,
+                    styles.roleQuickButton,
+                    role === 'customer' && styles.roleQuickButtonActive,
                   ]}>
-                  파트너
-                </Text>
-              </Pressable>
-            </View>
+                  <Text
+                    style={[
+                      styles.roleQuickButtonText,
+                      role === 'customer' && styles.roleQuickButtonTextActive,
+                    ]}>
+                    고객 mock
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => signInAs('partner')}
+                  style={[
+                    styles.roleQuickButton,
+                    role === 'partner' && styles.roleQuickButtonActive,
+                  ]}>
+                  <Text
+                    style={[
+                      styles.roleQuickButtonText,
+                      role === 'partner' && styles.roleQuickButtonTextActive,
+                    ]}>
+                    파트너 mock
+                  </Text>
+                </Pressable>
+              </View>
+            ) : null}
 
             {role === 'partner' && (
               <View style={styles.partnerMenuWrap}>
                 <Pressable
                   accessibilityRole="button"
-                  onPress={() => setShowPartnerMenu((current) => !current)}
+                  onPress={() => {
+                    setShowDevRoleActions(false);
+                    setShowPartnerMenu((current) => !current);
+                  }}
                   style={styles.partnerMenuButton}>
                   <Text style={styles.partnerMenuButtonText}>파트너 바로가기</Text>
                 </Pressable>
@@ -212,6 +255,15 @@ export default function HomeScreen() {
             )}
           </View>
         </View>
+
+        {showDevRoleActions ? (
+          <View style={styles.devNoticeBox}>
+            <Text style={styles.devNoticeTitle}>개발용 빠른 전환</Text>
+            <Text style={styles.devNoticeText}>
+              실제 auth API와 별개로 고객/파트너 흐름을 빠르게 확인할 때만 사용하세요.
+            </Text>
+          </View>
+        ) : null}
 
         <View style={styles.header}>
           <Text style={styles.logo}>WinWin</Text>
@@ -341,6 +393,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '900',
   },
+  accountDescription: {
+    marginTop: 6,
+    color: '#555B66',
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: '600',
+  },
   accountActions: {
     alignItems: 'flex-end',
     gap: 8,
@@ -358,6 +417,28 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '900',
+  },
+  devToggleButton: {
+    minHeight: 32,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#D6DAE1',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  devToggleButtonActive: {
+    borderColor: '#15181D',
+    backgroundColor: '#15181D',
+  },
+  devToggleButtonText: {
+    color: '#555B66',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  devToggleButtonTextActive: {
+    color: '#FFFFFF',
   },
   roleQuickActions: {
     flexDirection: 'row',
@@ -382,6 +463,27 @@ const styles = StyleSheet.create({
   },
   roleQuickButtonTextActive: {
     color: '#FFFFFF',
+  },
+  devNoticeBox: {
+    marginTop: 10,
+    borderRadius: 14,
+    backgroundColor: '#FFF9E8',
+    borderWidth: 1,
+    borderColor: '#F4DE9A',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  devNoticeTitle: {
+    color: '#7C5A00',
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  devNoticeText: {
+    marginTop: 6,
+    color: '#7C5A00',
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: '600',
   },
   partnerMenuWrap: {
     alignItems: 'flex-end',

@@ -1,10 +1,14 @@
 import { router } from 'expo-router';
 
+import { createPartnerPost, mapPostDraftToCreatePayload } from '@/api/posts';
+import { useAuth } from '@/auth/mock-auth';
 import { ProtectedRoleScreen } from '@/components/winwin/ProtectedRoleScreen';
 import { ShopPostForm } from '@/components/winwin/ShopPostForm';
 import { addPostedMatching, categoryLabels } from '@/data/matchings';
 
 export default function PartnerPostNewScreen() {
+  const { accessToken, authSource } = useAuth();
+
   return (
     <ProtectedRoleScreen
       requiredRole="partner"
@@ -16,8 +20,14 @@ export default function PartnerPostNewScreen() {
       <ShopPostForm
         mode="create"
         onBack={() => router.back()}
-        onSubmit={(draft) => {
-          addPostedMatching(draft);
+        onSubmit={async (draft) => {
+          const usesApi = authSource === 'api' && !!accessToken;
+
+          if (usesApi && accessToken) {
+            await createPartnerPost(accessToken, mapPostDraftToCreatePayload(draft));
+          } else {
+            addPostedMatching(draft);
+          }
 
           router.push({
             pathname: '/partner/post/created',
@@ -34,6 +44,7 @@ export default function PartnerPostNewScreen() {
               requirementCount: String(draft.requirements.length),
               dateCount: String(draft.availableDates.length),
               deposit: String(draft.deposit),
+              source: usesApi ? 'api' : 'mock',
             },
           });
         }}
