@@ -57,6 +57,20 @@ public class PostService {
         .toList();
   }
 
+  @Transactional(readOnly = true)
+  public PostResponse getDiscoverablePost(Long postId) {
+    MatchingPost post =
+        matchingPostRepository
+            .findWithDetailsById(postId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
+
+    if (post.getStatus() != PostStatus.OPEN) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found");
+    }
+
+    return toResponse(post);
+  }
+
   @Transactional
   public PostResponse updatePartnerPost(
       Long postId, CreatePostRequest request, AuthenticatedUser authenticatedUser) {

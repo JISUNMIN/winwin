@@ -12,6 +12,7 @@ Git에는 올리지 않기 위해 `.gitignore`에 `codex/`를 추가했습니다
 - 커밋 메시지를 추천할 때는 현재 변경 감지된 파일과 관련 작업 Markdown을 함께 보고 판단합니다.
 - RN/앱 구현 문서는 기존 번호 step 시리즈를 유지합니다.
 - 백엔드 구현 문서는 별도 시리즈로 분리하고 `backend-01-...` 형식으로 기록합니다.
+- 작업이 끝나면 같은 턴 안에서 반드시 관련 Markdown을 바로 만듭니다.
 - 디자인 적용은 기본 예제를 띄워보고 구조를 이해한 뒤에 진행합니다.
 - Step 문서에는 React 개발자가 RN을 이해하기 쉬운 설명을 짧게 적습니다.
   예: `View = div 비슷한 레이아웃 박스`, `Pressable = button 비슷한 인터랙션 컴포넌트`
@@ -87,6 +88,10 @@ Git에는 올리지 않기 위해 `.gitignore`에 `codex/`를 추가했습니다
 - [Backend 01. Spring 프로젝트 시작 준비](./backend-01-spring-project-init.md)
 - [Backend 02. Auth API 첫 구현 요약](./backend-02-auth-api-first-pass.md)
 - [Backend 08. auth 401 공통 처리와 post API 1차 연동](./backend-08-auth-401-and-post-api-wiring.md)
+- [Backend 09. 공개 공고 홈/상세/채팅 화면 연동](./backend-09-public-posts-home-detail-chat-sync.md)
+- [Backend 10. 파트너 홈 공고 정보 실제 API 동기화](./backend-10-partner-home-post-sync.md)
+- [Backend 11. 파트너 상담 목록/채팅 API 1차 연결](./backend-11-partner-consultation-api-first-pass.md)
+- [Backend 12. 상담 DB 시드와 읽기 모델 전환](./backend-12-consultation-db-seed-and-read-model.md)
 - [RN 태그 정리 for React 개발자](./rn-tags-for-react-developers.md)
 - [개발 중 저장, 새로고침, 재시작, 빌드 차이](./dev-server-refresh-build.md)
 - [진행 기록과 다음 할 일](./progress-and-next-steps.md)
@@ -111,5 +116,6 @@ Git에는 올리지 않기 위해 `.gitignore`에 `codex/`를 추가했습니다
 ## 앞으로의 정리 방식
 
 - 한 단계가 끝날 때마다 별도 Markdown 파일을 만듭니다.
+- Markdown은 작업 종료 전에 바로 작성하고, 다음 작업으로 넘어가기 전에 `README.md` 문서 목록에도 반영합니다.
 - `README.md`에는 문서 목록만 짧게 관리합니다.
 - 실행 방법, 폴더 설명, RN 개념, 디자인 적용 기록을 주제별로 나눠서 적습니다.

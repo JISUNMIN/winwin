@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { getDiscoverablePosts, mapPostResponseToMatching } from '@/api/posts';
 import { roleLabels, useAuth } from '@/auth/mock-auth';
 import { CategoryFilter } from '@/components/winwin/CategoryFilter';
 import { MatchingCard } from '@/components/winwin/MatchingCard';
@@ -23,6 +24,8 @@ export default function HomeScreen() {
   const [currentLocation, setCurrentLocation] = useState('위치를 확인해보세요');
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
+  const [matchingLoadError, setMatchingLoadError] = useState<string | null>(null);
+  const [isFetchingMatchings, setIsFetchingMatchings] = useState(false);
   const [showPartnerMenu, setShowPartnerMenu] = useState(false);
   const [showDevRoleActions, setShowDevRoleActions] = useState(false);
 
@@ -69,9 +72,39 @@ export default function HomeScreen() {
   }, []);
 
   useEffect(() => {
-    if (isFocused) {
-      setMatchings(getDiscoverableMatchings());
+    if (!isFocused) {
+      return;
     }
+
+    let isMounted = true;
+
+    const loadMatchings = async () => {
+      setIsFetchingMatchings(true);
+      setMatchingLoadError(null);
+
+      try {
+        const response = await getDiscoverablePosts();
+
+        if (isMounted) {
+          setMatchings(response.map(mapPostResponseToMatching));
+        }
+      } catch {
+        if (isMounted) {
+          setMatchings(getDiscoverableMatchings());
+          setMatchingLoadError('서버 공고를 불러오지 못해 임시 mock 목록을 보여주고 있어요.');
+        }
+      } finally {
+        if (isMounted) {
+          setIsFetchingMatchings(false);
+        }
+      }
+    };
+
+    loadMatchings();
+
+    return () => {
+      isMounted = false;
+    };
   }, [isFocused]);
 
   const handleApplySearch = () => {
@@ -333,8 +366,19 @@ export default function HomeScreen() {
 
         <View style={styles.listHeader}>
           <Text style={styles.listTitle}>매칭 공고</Text>
-          <Text style={styles.listCount}>{filteredMatchings.length}개</Text>
+          <View style={styles.listHeaderMeta}>
+            {isFetchingMatchings ? (
+              <ActivityIndicator size="small" color="#6D5DFB" />
+            ) : null}
+            <Text style={styles.listCount}>{filteredMatchings.length}개</Text>
+          </View>
         </View>
+
+        {matchingLoadError ? (
+          <View style={styles.listErrorBox}>
+            <Text style={styles.listErrorText}>{matchingLoadError}</Text>
+          </View>
+        ) : null}
 
         {filteredMatchings.length > 0 ? (
           <View style={styles.cardList}>
@@ -664,6 +708,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  listHeaderMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   listTitle: {
     color: '#15181D',
     fontSize: 18,
@@ -673,6 +722,21 @@ const styles = StyleSheet.create({
     color: '#747B87',
     fontSize: 13,
     fontWeight: '700',
+  },
+  listErrorBox: {
+    marginBottom: 10,
+    borderRadius: 12,
+    backgroundColor: '#FFF7ED',
+    borderWidth: 1,
+    borderColor: '#FED7AA',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  listErrorText: {
+    color: '#B45309',
+    fontSize: 12,
+    fontWeight: '700',
+    lineHeight: 18,
   },
   cardList: {
     gap: 14,

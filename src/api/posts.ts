@@ -57,6 +57,12 @@ export function getDiscoverablePosts() {
   });
 }
 
+export function getDiscoverablePost(postId: number) {
+  return requestJson<PostResponse>(`/api/posts/${postId}`, {
+    method: 'GET',
+  });
+}
+
 export function getPartnerPosts(accessToken: string) {
   return requestJson<PostResponse[]>('/api/partner/posts', {
     method: 'GET',

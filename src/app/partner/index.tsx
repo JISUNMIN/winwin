@@ -3,16 +3,29 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import {
+  getPartnerConsultations,
+  mapConsultationResponseToPartnerConsultation,
+} from '@/api/consultations';
+import { getPartnerPosts, mapPostResponseToMatching } from '@/api/posts';
+import { useAuth } from '@/auth/mock-auth';
 import { ProtectedRoleScreen } from '@/components/winwin/ProtectedRoleScreen';
 import {
   formatConsultationUpdatedText,
   mockPartnerConsultations,
+  type PartnerConsultation,
   type ConsultationStatusTone,
 } from '@/data/consultations';
-import { formatKoreanDate, getPostedMatchings, mockMatchings } from '@/data/matchings';
+import {
+  formatKoreanDate,
+  getAllMatchings,
+  getPostedMatchings,
+  mockMatchings,
+  type Matching,
+} from '@/data/matchings';
 
 type FilterKey = 'all' | ConsultationStatusTone;
 
@@ -68,20 +81,119 @@ export default function PartnerHomeScreen() {
 
 function PartnerHomeContent() {
   const isFocused = useIsFocused();
+  const { accessToken, authSource } = useAuth();
   const [selectedFilter, setSelectedFilter] = useState<FilterKey>('all');
   const [postedMatchings, setPostedMatchings] = useState(() => getPostedMatchings());
+  const [isLoadingPosts, setIsLoadingPosts] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [consultations, setConsultations] = useState<PartnerConsultation[]>(mockPartnerConsultations);
 
   useEffect(() => {
-    if (isFocused) {
-      setPostedMatchings(getPostedMatchings());
+    if (!isFocused) {
+      return;
     }
-  }, [isFocused]);
+
+    let isMounted = true;
+
+    const loadPosts = async () => {
+      setLoadError(null);
+
+      if (authSource === 'api' && accessToken) {
+        setIsLoadingPosts(true);
+
+        try {
+          const response = await getPartnerPosts(accessToken);
+
+          if (isMounted) {
+            setPostedMatchings(response.map(mapPostResponseToMatching));
+          }
+          return;
+        } catch {
+          if (isMounted) {
+            setLoadError('서버 공고를 불러오지 못해 상담 카드는 일부 mock 정보를 함께 보여주고 있어요.');
+          }
+        } finally {
+          if (isMounted) {
+            setIsLoadingPosts(false);
+          }
+        }
+      }
+
+      if (isMounted) {
+        setPostedMatchings(getPostedMatchings());
+        setIsLoadingPosts(false);
+      }
+    };
+
+    loadPosts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [accessToken, authSource, isFocused]);
+
+  useEffect(() => {
+    if (!isFocused) {
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadConsultations = async () => {
+      if (authSource === 'api' && accessToken) {
+        try {
+          const response = await getPartnerConsultations(accessToken);
+
+          if (isMounted) {
+            setConsultations(response.map(mapConsultationResponseToPartnerConsultation));
+          }
+          return;
+        } catch {
+          if (isMounted) {
+            setLoadError(
+              '상담 목록 API를 불러오지 못해 일부 상담은 mock 데이터로 보여주고 있어요.',
+            );
+          }
+        }
+      }
+
+      if (isMounted) {
+        setConsultations(mockPartnerConsultations);
+      }
+    };
+
+    loadConsultations();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [accessToken, authSource, isFocused]);
+
+  const matchingById = useMemo(() => {
+    const entries = new Map<string, Matching>();
+
+    for (const matching of getAllMatchings()) {
+      entries.set(matching.id, matching);
+    }
+
+    for (const matching of mockMatchings) {
+      if (!entries.has(matching.id)) {
+        entries.set(matching.id, matching);
+      }
+    }
+
+    for (const matching of postedMatchings) {
+      entries.set(matching.id, matching);
+    }
+
+    return entries;
+  }, [postedMatchings]);
 
   const consultationItems = useMemo(
     () =>
-      mockPartnerConsultations
+      consultations
         .map((status) => {
-          const matching = mockMatchings.find((item) => item.id === status.matchingId);
+          const matching = matchingById.get(status.matchingId);
 
           if (!matching) {
             return null;
@@ -94,7 +206,7 @@ function PartnerHomeContent() {
         })
         .filter((item): item is NonNullable<typeof item> => item !== null)
         .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()),
-    [],
+    [consultations, matchingById],
   );
 
   const filteredConsultationItems = consultationItems.filter((item) =>
@@ -118,6 +230,13 @@ function PartnerHomeContent() {
           <Text style={styles.subtitle}>진행 중인 상담과 예약 상태를 한 번에 확인하세요.</Text>
         </View>
 
+        {loadError ? (
+          <View style={styles.errorBanner}>
+            <Ionicons name="alert-circle" size={18} color="#B45309" />
+            <Text style={styles.errorBannerText}>{loadError}</Text>
+          </View>
+        ) : null}
+
         <Pressable
           accessibilityRole="button"
           onPress={() => router.push('/partner/post' as never)}
@@ -129,6 +248,7 @@ function PartnerHomeContent() {
               등록한 공고 {postedMatchings.length}개를 따로 관리
             </Text>
           </View>
+          {isLoadingPosts ? <ActivityIndicator size="small" color="#6D5DFB" /> : null}
           <Ionicons name="chevron-forward" size={18} color="#15181D" />
         </Pressable>
 
@@ -276,6 +396,24 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 16,
+  },
+  errorBanner: {
+    marginBottom: 14,
+    borderRadius: 14,
+    backgroundColor: '#FFF7ED',
+    borderWidth: 1,
+    borderColor: '#FED7AA',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  errorBannerText: {
+    flex: 1,
+    color: '#B45309',
+    fontSize: 13,
+    fontWeight: '800',
   },
   title: {
     color: '#15181D',

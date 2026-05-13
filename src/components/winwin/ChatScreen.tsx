@@ -5,6 +5,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -16,6 +17,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import {
+  getPartnerConsultation as getPartnerConsultationApi,
+  mapConsultationResponseToPartnerConsultation,
+} from '@/api/consultations';
+import {
+  getDiscoverablePost,
+  getPartnerPost,
+  mapPostResponseToMatching,
+} from '@/api/posts';
 import { useAuth } from '@/auth/mock-auth';
 import { BookingPicker } from '@/components/winwin/BookingPicker';
 import type { DesiredScheduleOption } from '@/components/winwin/BookingPicker';
@@ -28,8 +38,11 @@ import { ShopChatActionBar } from '@/components/winwin/ShopChatActionBar';
 import { ShopChatHeaderActions } from '@/components/winwin/ShopChatHeaderActions';
 import { ShopChatStatusCard } from '@/components/winwin/ShopChatStatusCard';
 import { ShopScheduleReviewCard } from '@/components/winwin/ShopScheduleReviewCard';
-import { getPartnerConsultationByMatchingId } from '@/data/consultations';
-import { getAllMatchings } from '@/data/matchings';
+import {
+  getPartnerConsultationByMatchingId,
+  type PartnerConsultation,
+} from '@/data/consultations';
+import { getAllMatchings, type Matching } from '@/data/matchings';
 
 export type ViewerRole = 'customer' | 'partner';
 
@@ -107,14 +120,36 @@ function formatMessageTime(date: Date) {
   });
 }
 
+function getSeedMessages(
+  matching: Matching | undefined,
+  consultation: PartnerConsultation | undefined,
+): Message[] {
+  return consultation
+    ? consultation.messages.map((message) => ({
+        id: message.id,
+        senderRole: message.senderRole,
+        type: message.type,
+        content: message.content,
+        timestamp: new Date(Date.now() - message.minutesAgo * 60000),
+        desiredScheduleOptions: message.desiredScheduleOptions,
+        bookingData: message.bookingData,
+      }))
+    : createDefaultMessages(matching?.shopName ?? '매장');
+}
+
 export function ChatScreen({
   initialViewerRole,
   allowRoleSwitch = false,
 }: ChatScreenProps) {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { role, openAuth } = useAuth();
-  const matching = getAllMatchings().find((item) => item.id === id);
-  const consultation = id ? getPartnerConsultationByMatchingId(id) : undefined;
+  const { role, openAuth, authSource, accessToken } = useAuth();
+  const [matching, setMatching] = useState<Matching | undefined>(() =>
+    getAllMatchings().find((item) => item.id === id),
+  );
+  const [isLoadingMatching, setIsLoadingMatching] = useState(true);
+  const [consultation, setConsultation] = useState<PartnerConsultation | undefined>(() =>
+    id ? getPartnerConsultationByMatchingId(id) : undefined,
+  );
   const scrollRef = useRef<ScrollView>(null);
   const messageOffsetsRef = useRef<Record<string, number>>({});
   const [viewerRole, setViewerRole] = useState<ViewerRole>(initialViewerRole);
@@ -131,17 +166,7 @@ export function ChatScreen({
       : createDefaultBookingFlowState(),
   );
   const [messages, setMessages] = useState<Message[]>(() =>
-    consultation
-      ? consultation.messages.map((message) => ({
-          id: message.id,
-          senderRole: message.senderRole,
-          type: message.type,
-          content: message.content,
-          timestamp: new Date(Date.now() - message.minutesAgo * 60000),
-          desiredScheduleOptions: message.desiredScheduleOptions,
-          bookingData: message.bookingData,
-        }))
-      : createDefaultMessages(matching?.shopName ?? '매장'),
+    getSeedMessages(matching, consultation),
   );
 
   useEffect(() => {
@@ -149,22 +174,94 @@ export function ChatScreen({
   }, [initialViewerRole]);
 
   useEffect(() => {
-    if (!matching) {
+    if (!id) {
+      setMatching(undefined);
+      setIsLoadingMatching(false);
       return;
     }
 
+    let isMounted = true;
+
+    const fallbackMatching = getAllMatchings().find((item) => item.id === id);
+
+    const loadMatching = async () => {
+      setIsLoadingMatching(true);
+
+      try {
+        if (initialViewerRole === 'partner' && authSource === 'api' && accessToken) {
+          const response = await getPartnerPost(accessToken, Number(id));
+
+          if (isMounted) {
+            setMatching(mapPostResponseToMatching(response));
+          }
+          return;
+        }
+
+        const response = await getDiscoverablePost(Number(id));
+
+        if (isMounted) {
+          setMatching(mapPostResponseToMatching(response));
+        }
+      } catch {
+        if (isMounted) {
+          setMatching(fallbackMatching);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingMatching(false);
+        }
+      }
+    };
+
+    loadMatching();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [accessToken, authSource, id, initialViewerRole]);
+
+  useEffect(() => {
+    if (!id) {
+      setConsultation(undefined);
+      return;
+    }
+
+    let isMounted = true;
+
+    const fallbackConsultation = getPartnerConsultationByMatchingId(id);
+
+    const loadConsultation = async () => {
+      if (initialViewerRole === 'partner' && authSource === 'api' && accessToken) {
+        try {
+          const response = await getPartnerConsultationApi(accessToken, Number(id));
+
+          if (isMounted) {
+            setConsultation(mapConsultationResponseToPartnerConsultation(response));
+          }
+          return;
+        } catch {
+          if (isMounted) {
+            setConsultation(fallbackConsultation);
+          }
+          return;
+        }
+      }
+
+      if (isMounted) {
+        setConsultation(fallbackConsultation);
+      }
+    };
+
+    loadConsultation();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [accessToken, authSource, id, initialViewerRole]);
+
+  useEffect(() => {
     setMessages(
-      consultation
-        ? consultation.messages.map((message) => ({
-            id: message.id,
-            senderRole: message.senderRole,
-            type: message.type,
-            content: message.content,
-            timestamp: new Date(Date.now() - message.minutesAgo * 60000),
-            desiredScheduleOptions: message.desiredScheduleOptions,
-            bookingData: message.bookingData,
-          }))
-        : createDefaultMessages(matching.shopName),
+      getSeedMessages(matching, consultation),
     );
     setBookingFlowState(
       consultation
@@ -186,6 +283,17 @@ export function ChatScreen({
       scrollRef.current?.scrollToEnd({ animated: true });
     });
   }, [messages]);
+
+  if (isLoadingMatching) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.loadingBox}>
+          <ActivityIndicator size="small" color="#6D5DFB" />
+          <Text style={styles.loadingText}>채팅 정보를 불러오고 있어요</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (!matching) {
     return (
@@ -925,5 +1033,16 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '800',
+  },
+  loadingBox: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  loadingText: {
+    color: '#555B66',
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

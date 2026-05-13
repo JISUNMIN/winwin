@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { getDiscoverablePost, mapPostResponseToMatching } from '@/api/posts';
 import { useAuth } from '@/auth/mock-auth';
 import {
   formatKoreanDate,
@@ -15,8 +17,55 @@ import {
 export default function MatchingDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { role, openAuth } = useAuth();
-  const matching = getAllMatchings().find((item) => item.id === id);
+  const [matching, setMatching] = useState(() => getAllMatchings().find((item) => item.id === id));
+  const [isLoading, setIsLoading] = useState(true);
   const isPartner = role === 'partner';
+
+  useEffect(() => {
+    if (!id) {
+      setIsLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadMatching = async () => {
+      setIsLoading(true);
+
+      try {
+        const response = await getDiscoverablePost(Number(id));
+
+        if (isMounted) {
+          setMatching(mapPostResponseToMatching(response));
+        }
+      } catch {
+        if (isMounted) {
+          setMatching(getAllMatchings().find((item) => item.id === id));
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadMatching();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.loadingBox}>
+          <ActivityIndicator size="small" color="#6D5DFB" />
+          <Text style={styles.loadingText}>매칭 상세를 불러오고 있어요</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (!matching) {
     return (
@@ -468,5 +517,16 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '800',
+  },
+  loadingBox: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  loadingText: {
+    color: '#555B66',
+    fontSize: 14,
+    fontWeight: '700',
   },
 });
