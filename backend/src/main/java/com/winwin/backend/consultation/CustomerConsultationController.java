@@ -1,7 +1,7 @@
 package com.winwin.backend.consultation;
 
 import com.winwin.backend.consultation.dto.ConsultationResponse;
-import com.winwin.backend.consultation.dto.SendBookingRequest;
+import com.winwin.backend.consultation.dto.SendDesiredSchedulesRequest;
 import com.winwin.backend.consultation.dto.SendConsultationMessageRequest;
 import com.winwin.backend.security.AuthenticatedUser;
 import jakarta.validation.Valid;
@@ -15,47 +15,47 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/partner/consultations")
-public class PartnerConsultationController {
+@RequestMapping("/api/customer/consultations")
+public class CustomerConsultationController {
 
   private final ConsultationService consultationService;
 
-  public PartnerConsultationController(ConsultationService consultationService) {
+  public CustomerConsultationController(ConsultationService consultationService) {
     this.consultationService = consultationService;
   }
 
   @GetMapping
-  public List<ConsultationResponse> getPartnerConsultations(
+  public List<ConsultationResponse> getCustomerConsultations(
       @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
-    return consultationService.getPartnerConsultations(authenticatedUser);
+    return consultationService.getCustomerConsultations(authenticatedUser);
   }
 
   @GetMapping("/{postId}")
-  public ConsultationResponse getPartnerConsultation(
+  public ConsultationResponse getCustomerConsultation(
       @PathVariable Long postId, @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
-    return consultationService.getPartnerConsultation(postId, authenticatedUser);
+    return consultationService.getCustomerConsultation(postId, authenticatedUser);
   }
 
   @PostMapping("/{postId}/messages")
-  public ConsultationResponse sendPartnerMessage(
+  public ConsultationResponse sendCustomerMessage(
       @PathVariable Long postId,
       @Valid @RequestBody SendConsultationMessageRequest request,
       @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
-    return consultationService.sendPartnerTextMessage(postId, request, authenticatedUser);
+    return consultationService.sendCustomerTextMessage(postId, request, authenticatedUser);
   }
 
-  @PostMapping("/{postId}/booking-request")
-  public ConsultationResponse sendPartnerBookingRequest(
+  @PostMapping("/{postId}/desired-schedules")
+  public ConsultationResponse sendCustomerDesiredSchedules(
       @PathVariable Long postId,
-      @Valid @RequestBody SendBookingRequest request,
+      @Valid @RequestBody SendDesiredSchedulesRequest request,
       @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
-    return consultationService.sendPartnerBookingRequest(postId, request, authenticatedUser);
+    return consultationService.sendCustomerDesiredSchedules(postId, request, authenticatedUser);
   }
 
-  @PostMapping("/{postId}/close")
-  public ConsultationResponse closePartnerConsultation(
+  @PostMapping("/{postId}/payment-complete")
+  public ConsultationResponse completeCustomerPayment(
       @PathVariable Long postId,
       @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
-    return consultationService.closePartnerConsultation(postId, authenticatedUser);
+    return consultationService.completeCustomerPayment(postId, authenticatedUser);
   }
 }

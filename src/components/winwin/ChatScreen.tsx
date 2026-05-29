@@ -18,8 +18,15 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
+  closePartnerConsultation,
+  completeCustomerConsultationPayment,
+  getCustomerConsultation,
   getPartnerConsultation as getPartnerConsultationApi,
   mapConsultationResponseToPartnerConsultation,
+  sendCustomerDesiredSchedules,
+  sendCustomerConsultationTextMessage,
+  sendPartnerBookingRequest,
+  sendPartnerConsultationTextMessage,
 } from '@/api/consultations';
 import {
   getDiscoverablePost,
@@ -156,6 +163,7 @@ export function ChatScreen({
   const [inputMessage, setInputMessage] = useState('');
   const [showBookingPicker, setShowBookingPicker] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<BookingData | null>(null);
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [bookingFlowState, setBookingFlowState] = useState<BookingFlowState>(() =>
     consultation
       ? {
@@ -247,6 +255,22 @@ export function ChatScreen({
         }
       }
 
+      if (initialViewerRole === 'customer' && authSource === 'api' && accessToken) {
+        try {
+          const response = await getCustomerConsultation(accessToken, Number(id));
+
+          if (isMounted) {
+            setConsultation(mapConsultationResponseToPartnerConsultation(response));
+          }
+          return;
+        } catch {
+          if (isMounted) {
+            setConsultation(fallbackConsultation);
+          }
+          return;
+        }
+      }
+
       if (isMounted) {
         setConsultation(fallbackConsultation);
       }
@@ -320,6 +344,10 @@ export function ChatScreen({
     });
 
   const handleSendMessage = () => {
+    if (isSendingMessage) {
+      return;
+    }
+
     if (viewerRole === 'customer' && !canUseCustomerActions) {
       openCustomerAuth();
       return;
@@ -328,6 +356,25 @@ export function ChatScreen({
     const trimmedMessage = inputMessage.trim();
 
     if (!trimmedMessage) {
+      return;
+    }
+
+    if (authSource === 'api' && accessToken && id) {
+      setIsSendingMessage(true);
+
+      const request =
+        viewerRole === 'partner'
+          ? sendPartnerConsultationTextMessage(accessToken, Number(id), trimmedMessage)
+          : sendCustomerConsultationTextMessage(accessToken, Number(id), trimmedMessage);
+
+      request
+        .then((response) => {
+          setConsultation(mapConsultationResponseToPartnerConsultation(response));
+          setInputMessage('');
+        })
+        .finally(() => {
+          setIsSendingMessage(false);
+        });
       return;
     }
 
@@ -415,12 +462,30 @@ export function ChatScreen({
   };
 
   const handleSendDesiredSchedule = (options: DesiredScheduleOption[]) => {
+    if (isSendingMessage) {
+      return;
+    }
+
     if (viewerRole !== 'customer') {
       return;
     }
 
     if (!canUseCustomerActions) {
       openCustomerAuth();
+      return;
+    }
+
+    if (authSource === 'api' && accessToken && id) {
+      setIsSendingMessage(true);
+
+      sendCustomerDesiredSchedules(accessToken, Number(id), options)
+        .then((response) => {
+          setConsultation(mapConsultationResponseToPartnerConsultation(response));
+          setShowBookingPicker(false);
+        })
+        .finally(() => {
+          setIsSendingMessage(false);
+        });
       return;
     }
 
@@ -474,11 +539,28 @@ export function ChatScreen({
     reviewMessageId: string,
     selectedOption: DesiredScheduleOption,
   ) => {
+    if (isSendingMessage || bookingFlowState.status !== 'reviewing-schedules') {
+      return;
+    }
+
     const bookingData: BookingData = {
       date: selectedOption.date,
       time: selectedOption.time,
       deposit: matching.deposit ?? 5000,
     };
+
+    if (authSource === 'api' && accessToken && id) {
+      setIsSendingMessage(true);
+
+      sendPartnerBookingRequest(accessToken, Number(id), bookingData)
+        .then((response) => {
+          setConsultation(mapConsultationResponseToPartnerConsultation(response));
+        })
+        .finally(() => {
+          setIsSendingMessage(false);
+        });
+      return;
+    }
 
     setMessages((currentMessages) => {
       const nextMessages = currentMessages.filter((message) => message.id !== reviewMessageId);
@@ -511,6 +593,10 @@ export function ChatScreen({
   };
 
   const handleAcceptBooking = (bookingData: BookingData) => {
+    if (isSendingMessage) {
+      return;
+    }
+
     setSelectedBooking(bookingData);
   };
 
@@ -524,15 +610,51 @@ export function ChatScreen({
   };
 
   const handlePressCloseConsultation = () => {
-    Alert.alert(
-      '상담 종료',
-      '이 mock 화면에서는 상담 종료 후에도 메시지는 유지됩니다. 나중에 상태 변경 로직과 연결할 수 있어요.',
-    );
+    if (authSource === 'api' && accessToken && id) {
+      Alert.alert('상담 종료', '현재 상담을 종료 상태로 변경할까요?', [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '종료',
+          style: 'default',
+          onPress: () => {
+            setIsSendingMessage(true);
+            closePartnerConsultation(accessToken, Number(id))
+              .then((response) => {
+                setConsultation(mapConsultationResponseToPartnerConsultation(response));
+              })
+              .finally(() => {
+                setIsSendingMessage(false);
+              });
+          },
+        },
+      ]);
+      return;
+    }
+
+    Alert.alert('상담 종료', '이 mock 화면에서는 상담 상태만 종료로 바뀌지는 않아요.');
   };
 
   const handlePaymentComplete = (bookingData: BookingData) => {
+    if (isSendingMessage) {
+      return;
+    }
+
     if (!canUseCustomerActions) {
       openCustomerAuth();
+      return;
+    }
+
+    if (authSource === 'api' && accessToken && id) {
+      setIsSendingMessage(true);
+
+      completeCustomerConsultationPayment(accessToken, Number(id))
+        .then((response) => {
+          setConsultation(mapConsultationResponseToPartnerConsultation(response));
+          setSelectedBooking(null);
+        })
+        .finally(() => {
+          setIsSendingMessage(false);
+        });
       return;
     }
 
@@ -712,7 +834,19 @@ export function ChatScreen({
                   </View>
                 ) : message.type === 'desired-schedule' && message.desiredScheduleOptions ? (
                   <View style={styles.cardMessage}>
-                    <DesiredScheduleCard options={message.desiredScheduleOptions} />
+                    {isCustomerViewer ? (
+                      <DesiredScheduleCard options={message.desiredScheduleOptions} />
+                    ) : (
+                      <ShopScheduleReviewCard
+                        options={message.desiredScheduleOptions}
+                        deposit={matching.deposit ?? 5000}
+                        selectable={
+                          !isSendingMessage &&
+                          bookingFlowState.status === 'reviewing-schedules'
+                        }
+                        onSelectOption={(option) => handleSelectShopSchedule(message.id, option)}
+                      />
+                    )}
                     <Text style={[styles.cardTimeText, isMine && styles.userCardTimeText]}>
                       {formatMessageTime(message.timestamp)}
                     </Text>
@@ -721,7 +855,7 @@ export function ChatScreen({
                   <View style={styles.cardMessage}>
                     <BookingRequestCard
                       bookingData={message.bookingData}
-                      canAccept={isCustomerViewer && canUseCustomerActions}
+                      canAccept={isCustomerViewer && canUseCustomerActions && !isSendingMessage}
                       onAccept={handleAcceptBooking}
                     />
                     <Text style={[styles.cardTimeText, isMine && styles.userCardTimeText]}>
@@ -734,7 +868,11 @@ export function ChatScreen({
                     <ShopScheduleReviewCard
                       options={message.desiredScheduleOptions}
                       deposit={matching.deposit ?? 5000}
-                      selectable={!isCustomerViewer}
+                      selectable={
+                        !isCustomerViewer &&
+                        !isSendingMessage &&
+                        bookingFlowState.status === 'reviewing-schedules'
+                      }
                       onSelectOption={(option) => handleSelectShopSchedule(message.id, option)}
                     />
                     <Text style={[styles.cardTimeText, isMine && styles.userCardTimeText]}>
@@ -795,7 +933,10 @@ export function ChatScreen({
           <Pressable
             accessibilityRole="button"
             onPress={handleSendMessage}
-            style={[styles.sendButton, !inputMessage.trim() && styles.sendButtonDisabled]}>
+            style={[
+              styles.sendButton,
+              (!inputMessage.trim() || isSendingMessage) && styles.sendButtonDisabled,
+            ]}>
             <Ionicons name="send" size={18} color="#FFFFFF" />
           </Pressable>
         </View>

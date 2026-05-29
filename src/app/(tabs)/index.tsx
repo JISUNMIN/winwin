@@ -286,6 +286,19 @@ export default function HomeScreen() {
                 )}
               </View>
             )}
+
+            {role === 'customer' && (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => {
+                  setShowPartnerMenu(false);
+                  setShowDevRoleActions(false);
+                  router.push('/chat' as never);
+                }}
+                style={styles.partnerMenuButton}>
+                <Text style={styles.partnerMenuButtonText}>내 상담</Text>
+              </Pressable>
+            )}
           </View>
         </View>
 

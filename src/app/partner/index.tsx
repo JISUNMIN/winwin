@@ -35,9 +35,17 @@ const statusFilterOptions: { key: FilterKey; label: string }[] = [
   { key: 'review', label: '검토중' },
   { key: 'payment', label: '결제대기' },
   { key: 'confirmed', label: '확정' },
+  { key: 'closed', label: '종료' },
 ];
 
 function getStatusStyles(tone: ConsultationStatusTone) {
+  if (tone === 'closed') {
+    return {
+      badge: styles.statusBadgeClosed,
+      text: styles.statusTextClosed,
+    };
+  }
+
   if (tone === 'confirmed') {
     return {
       badge: styles.statusBadgeConfirmed,
@@ -212,6 +220,9 @@ function PartnerHomeContent() {
   const filteredConsultationItems = consultationItems.filter((item) =>
     selectedFilter === 'all' ? true : item.statusTone === selectedFilter,
   );
+  const activeConsultationCount = consultationItems.filter((item) => item.statusTone !== 'closed').length;
+  const closedConsultationCount = consultationItems.filter((item) => item.statusTone === 'closed').length;
+  const paymentPendingCount = consultationItems.filter((item) => item.statusTone === 'payment').length;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -263,14 +274,17 @@ function PartnerHomeContent() {
         <View style={styles.summaryRow}>
           <View style={styles.summaryCard}>
             <Text style={styles.summaryLabel}>진행 중 상담</Text>
-            <Text style={styles.summaryValue}>{consultationItems.length}건</Text>
+            <Text style={styles.summaryValue}>{activeConsultationCount}건</Text>
           </View>
 
           <View style={styles.summaryCard}>
             <Text style={styles.summaryLabel}>결제 대기</Text>
-            <Text style={styles.summaryValue}>
-              {consultationItems.filter((item) => item.statusTone === 'payment').length}건
-            </Text>
+            <Text style={styles.summaryValue}>{paymentPendingCount}건</Text>
+          </View>
+
+          <View style={styles.summaryCard}>
+            <Text style={styles.summaryLabel}>종료됨</Text>
+            <Text style={styles.summaryValue}>{closedConsultationCount}건</Text>
           </View>
         </View>
 
@@ -572,6 +586,9 @@ const styles = StyleSheet.create({
   statusBadgeWaiting: {
     backgroundColor: '#F3F4F6',
   },
+  statusBadgeClosed: {
+    backgroundColor: '#FEE2E2',
+  },
   statusText: {
     fontSize: 12,
     fontWeight: '900',
@@ -587,6 +604,9 @@ const styles = StyleSheet.create({
   },
   statusTextWaiting: {
     color: '#6B7280',
+  },
+  statusTextClosed: {
+    color: '#B91C1C',
   },
   service: {
     marginTop: 8,

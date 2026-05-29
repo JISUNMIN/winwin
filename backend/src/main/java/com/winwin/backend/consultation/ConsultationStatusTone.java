@@ -4,5 +4,6 @@ public enum ConsultationStatusTone {
   REVIEW,
   PAYMENT,
   CONFIRMED,
-  WAITING
+  WAITING,
+  CLOSED
 }

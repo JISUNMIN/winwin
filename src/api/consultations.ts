@@ -55,9 +55,115 @@ export function getPartnerConsultations(accessToken: string) {
   } as RequestInit & { unauthorizedBehavior: 'notify' });
 }
 
+export function getCustomerConsultations(accessToken: string) {
+  return requestJson<ConsultationResponse[]>('/api/customer/consultations', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    unauthorizedBehavior: 'notify',
+  } as RequestInit & { unauthorizedBehavior: 'notify' });
+}
+
 export function getPartnerConsultation(accessToken: string, postId: number) {
   return requestJson<ConsultationResponse>(`/api/partner/consultations/${postId}`, {
     method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    unauthorizedBehavior: 'notify',
+  } as RequestInit & { unauthorizedBehavior: 'notify' });
+}
+
+export function getCustomerConsultation(accessToken: string, postId: number) {
+  return requestJson<ConsultationResponse>(`/api/customer/consultations/${postId}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    unauthorizedBehavior: 'notify',
+  } as RequestInit & { unauthorizedBehavior: 'notify' });
+}
+
+export function sendPartnerConsultationTextMessage(
+  accessToken: string,
+  postId: number,
+  content: string,
+) {
+  return requestJson<ConsultationResponse>(`/api/partner/consultations/${postId}/messages`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ content }),
+    unauthorizedBehavior: 'notify',
+  } as RequestInit & { unauthorizedBehavior: 'notify' });
+}
+
+export function sendCustomerConsultationTextMessage(
+  accessToken: string,
+  postId: number,
+  content: string,
+) {
+  return requestJson<ConsultationResponse>(`/api/customer/consultations/${postId}/messages`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ content }),
+    unauthorizedBehavior: 'notify',
+  } as RequestInit & { unauthorizedBehavior: 'notify' });
+}
+
+export function sendCustomerDesiredSchedules(
+  accessToken: string,
+  postId: number,
+  options: ConsultationApiScheduleOption[],
+) {
+  return requestJson<ConsultationResponse>(`/api/customer/consultations/${postId}/desired-schedules`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ options }),
+    unauthorizedBehavior: 'notify',
+  } as RequestInit & { unauthorizedBehavior: 'notify' });
+}
+
+export function sendPartnerBookingRequest(
+  accessToken: string,
+  postId: number,
+  bookingData: ConsultationApiBookingSelection,
+) {
+  return requestJson<ConsultationResponse>(`/api/partner/consultations/${postId}/booking-request`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(bookingData),
+    unauthorizedBehavior: 'notify',
+  } as RequestInit & { unauthorizedBehavior: 'notify' });
+}
+
+export function completeCustomerConsultationPayment(
+  accessToken: string,
+  postId: number,
+) {
+  return requestJson<ConsultationResponse>(`/api/customer/consultations/${postId}/payment-complete`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    unauthorizedBehavior: 'notify',
+  } as RequestInit & { unauthorizedBehavior: 'notify' });
+}
+
+export function closePartnerConsultation(
+  accessToken: string,
+  postId: number,
+) {
+  return requestJson<ConsultationResponse>(`/api/partner/consultations/${postId}/close`, {
+    method: 'POST',
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },

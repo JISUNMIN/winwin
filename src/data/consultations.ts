@@ -1,7 +1,7 @@
 import type { BookingData } from '@/components/winwin/BookingRequestCard';
 import type { DesiredScheduleOption } from '@/components/winwin/BookingPicker';
 
-export type ConsultationStatusTone = 'review' | 'payment' | 'confirmed' | 'waiting';
+export type ConsultationStatusTone = 'review' | 'payment' | 'confirmed' | 'waiting' | 'closed';
 export type ConsultationBookingStatus =
   | 'idle'
   | 'reviewing-schedules'
@@ -270,6 +270,10 @@ export const mockPartnerConsultations: PartnerConsultation[] = [
     ],
   },
 ];
+
+export function getMockCustomerConsultations() {
+  return mockPartnerConsultations.filter((item) => item.statusTone !== 'closed');
+}
 
 export function getPartnerConsultationByMatchingId(matchingId: string) {
   return mockPartnerConsultations.find((item) => item.matchingId === matchingId);

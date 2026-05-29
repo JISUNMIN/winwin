@@ -12,4 +12,10 @@ public interface ConsultationRepository extends JpaRepository<Consultation, Long
 
   @EntityGraph(attributePaths = {"post", "post.owner", "customer"})
   Optional<Consultation> findByPostIdAndPostOwnerId(Long postId, Long ownerId);
+
+  @EntityGraph(attributePaths = {"post", "post.owner", "customer"})
+  Optional<Consultation> findByPostIdAndCustomerId(Long postId, Long customerId);
+
+  @EntityGraph(attributePaths = {"post", "post.owner", "customer"})
+  List<Consultation> findByCustomerIdOrderByUpdatedAtDesc(Long customerId);
 }
