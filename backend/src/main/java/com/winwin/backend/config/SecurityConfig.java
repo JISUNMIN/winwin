@@ -38,6 +38,8 @@ public class SecurityConfig {
             auth ->
                 auth.requestMatchers("/api/health", "/api/auth/**", "/api/posts", "/api/posts/*")
                     .permitAll()
+                    .requestMatchers("/uploads/**")
+                    .permitAll()
                     .anyRequest()
                     .authenticated())
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

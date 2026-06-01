@@ -1,57 +1,133 @@
-# Welcome to your Expo app 👋
+# WinWin
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+WinWin is a React Native + Expo client with a Spring Boot backend for customer/partner matching, consultation chat, schedule coordination, and booking confirmation.
 
-## Get started
+## Stack
 
-1. Install dependencies
+- Frontend: Expo, React Native, Expo Router, TypeScript
+- Backend: Spring Boot, Spring Security, Spring Data JPA, PostgreSQL
+- Media: local file upload storage served from `/uploads/**`
 
-   ```bash
-   npm install
-   ```
+## Local Run
 
-2. Start the app
+### Frontend
 
-   ```bash
-   npx expo start
-   ```
+1. Install packages
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```powershell
+npm.cmd install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. Create an env file from `.env.example`
 
-### Other setup steps
+3. Start Expo
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```powershell
+npm.cmd run start
+```
 
-## Learn more
+### Backend
 
-To learn more about developing your project with Expo, look at the following resources:
+1. Start PostgreSQL
+2. Run Spring Boot
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```powershell
+cd backend
+.\mvnw.cmd spring-boot:run
+```
 
-## Join the community
+## Required Environment Variables
 
-Join our community of developers creating universal apps.
+### Frontend
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
-# winwin
+```text
+EXPO_PUBLIC_API_BASE_URL=http://localhost:8080
+```
+
+Optional development flags:
+
+```text
+EXPO_PUBLIC_ENABLE_DEV_ROLE_SWITCH=true
+EXPO_PUBLIC_ENABLE_DEV_FALLBACK_DATA=true
+```
+
+Production builds should leave both development flags unset or set them to `false`.
+
+### Backend
+
+```text
+DB_URL=jdbc:postgresql://localhost:5432/winwin
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+JWT_SECRET=replace-with-a-long-random-secret
+SERVER_PORT=8080
+APP_ENV=development
+APP_UPLOAD_DIR=uploads
+```
+
+Production recommendations:
+
+```text
+APP_ENV=production
+APP_UPLOAD_DIR=/managed/persistent/path
+```
+
+Health endpoint response now includes:
+
+- `service`
+- `environment`
+- `uploadDirectoryReady`
+- `uploadDirectory`
+
+## Production Guards
+
+The project now blocks a few dangerous deployment mistakes:
+
+- Frontend production build fails early when `EXPO_PUBLIC_API_BASE_URL` is missing
+- Backend production startup fails when `JWT_SECRET` still uses the development default
+- Backend production startup fails when `APP_UPLOAD_DIR` is left at the default local `uploads` path
+
+## Verification
+
+Frontend typecheck:
+
+```powershell
+.\node_modules\.bin\tsc.cmd --noEmit
+```
+
+Backend tests:
+
+```powershell
+cd backend
+.\mvnw.cmd test
+```
+
+Release readiness sweep:
+
+```powershell
+npm.cmd run release:check
+```
+
+In Windows PowerShell, prefer `npm.cmd` instead of `npm`.
+
+This command expects a live backend at `http://localhost:8080` by default.
+If needed, override it with `WINWIN_BACKEND_URL`.
+
+Android Gradle config check:
+
+```powershell
+cd android
+.\gradlew.bat help
+```
+
+## Deployment Checklist
+
+See:
+
+- [codex/deployment-readiness-checklist.md](./codex/deployment-readiness-checklist.md)
+
+## Project Notes
+
+Detailed work logs and architectural notes are tracked in:
+
+- [codex/README.md](./codex/README.md)

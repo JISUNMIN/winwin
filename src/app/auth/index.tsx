@@ -23,6 +23,7 @@ import {
 } from '@/auth/mock-auth';
 import { login, signup, type AuthApiRole } from '@/api/auth';
 import { ApiError, type ApiFieldError } from '@/api/http';
+import { ENABLE_DEV_ROLE_SWITCH } from '@/config/app-flags';
 
 type AuthMode = 'login' | 'signup';
 
@@ -322,59 +323,61 @@ export default function AuthScreen() {
             </Pressable>
           </View>
 
-          <View style={styles.helperCard}>
-            <Text style={styles.helperTitle}>게스트 또는 빠른 전환</Text>
-            <Text style={styles.helperDescription}>
-              실제 auth API 연결과 별개로, 현재 화면 흐름 확인용 빠른 전환도 계속 사용할 수 있어요.
-            </Text>
+          {ENABLE_DEV_ROLE_SWITCH ? (
+            <View style={styles.helperCard}>
+              <Text style={styles.helperTitle}>개발용 빠른 전환</Text>
+              <Text style={styles.helperDescription}>
+                실제 인증과 별개로 화면 흐름 점검이 필요할 때만 아래 개발용 전환을 사용하세요.
+              </Text>
 
-            <View style={styles.quickActionList}>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => handleSelectRole('guest')}
-                style={[styles.quickActionButton, role === 'guest' && styles.quickActionButtonActive]}>
-                <Text
-                  style={[
-                    styles.quickActionButtonText,
-                    role === 'guest' && styles.quickActionButtonTextActive,
-                  ]}>
-                  게스트
-                </Text>
-              </Pressable>
+              <View style={styles.quickActionList}>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => handleSelectRole('guest')}
+                  style={[styles.quickActionButton, role === 'guest' && styles.quickActionButtonActive]}>
+                  <Text
+                    style={[
+                      styles.quickActionButtonText,
+                      role === 'guest' && styles.quickActionButtonTextActive,
+                    ]}>
+                    게스트
+                  </Text>
+                </Pressable>
 
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => handleSelectRole('customer')}
-                style={[
-                  styles.quickActionButton,
-                  role === 'customer' && styles.quickActionButtonActive,
-                ]}>
-                <Text
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => handleSelectRole('customer')}
                   style={[
-                    styles.quickActionButtonText,
-                    role === 'customer' && styles.quickActionButtonTextActive,
+                    styles.quickActionButton,
+                    role === 'customer' && styles.quickActionButtonActive,
                   ]}>
-                  고객 mock
-                </Text>
-              </Pressable>
+                  <Text
+                    style={[
+                      styles.quickActionButtonText,
+                      role === 'customer' && styles.quickActionButtonTextActive,
+                    ]}>
+                    고객 빠른 전환
+                  </Text>
+                </Pressable>
 
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => handleSelectRole('partner')}
-                style={[
-                  styles.quickActionButton,
-                  role === 'partner' && styles.quickActionButtonActive,
-                ]}>
-                <Text
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => handleSelectRole('partner')}
                   style={[
-                    styles.quickActionButtonText,
-                    role === 'partner' && styles.quickActionButtonTextActive,
+                    styles.quickActionButton,
+                    role === 'partner' && styles.quickActionButtonActive,
                   ]}>
-                  파트너 mock
-                </Text>
-              </Pressable>
+                  <Text
+                    style={[
+                      styles.quickActionButtonText,
+                      role === 'partner' && styles.quickActionButtonTextActive,
+                    ]}>
+                    파트너 빠른 전환
+                  </Text>
+                </Pressable>
+              </View>
             </View>
-          </View>
+          ) : null}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

@@ -23,11 +23,14 @@ import {
   getCustomerConsultation,
   getPartnerConsultation as getPartnerConsultationApi,
   mapConsultationResponseToPartnerConsultation,
+  sendCustomerConsultationImage,
   sendCustomerDesiredSchedules,
   sendCustomerConsultationTextMessage,
+  sendPartnerConsultationImage,
   sendPartnerBookingRequest,
   sendPartnerConsultationTextMessage,
 } from '@/api/consultations';
+import { ApiError } from '@/api/http';
 import {
   getDiscoverablePost,
   getPartnerPost,
@@ -45,6 +48,7 @@ import { ShopChatActionBar } from '@/components/winwin/ShopChatActionBar';
 import { ShopChatHeaderActions } from '@/components/winwin/ShopChatHeaderActions';
 import { ShopChatStatusCard } from '@/components/winwin/ShopChatStatusCard';
 import { ShopScheduleReviewCard } from '@/components/winwin/ShopScheduleReviewCard';
+import { ENABLE_DEV_FALLBACK_DATA } from '@/config/app-flags';
 import {
   getPartnerConsultationByMatchingId,
   type PartnerConsultation,
@@ -127,6 +131,14 @@ function formatMessageTime(date: Date) {
   });
 }
 
+function getApiErrorMessage(error: unknown, fallbackMessage: string) {
+  if (error instanceof ApiError) {
+    return error.message;
+  }
+
+  return fallbackMessage;
+}
+
 function getSeedMessages(
   matching: Matching | undefined,
   consultation: PartnerConsultation | undefined,
@@ -138,6 +150,7 @@ function getSeedMessages(
         type: message.type,
         content: message.content,
         timestamp: new Date(Date.now() - message.minutesAgo * 60000),
+        imageUri: message.imageUri,
         desiredScheduleOptions: message.desiredScheduleOptions,
         bookingData: message.bookingData,
       }))
@@ -151,11 +164,11 @@ export function ChatScreen({
   const { id } = useLocalSearchParams<{ id: string }>();
   const { role, openAuth, authSource, accessToken } = useAuth();
   const [matching, setMatching] = useState<Matching | undefined>(() =>
-    getAllMatchings().find((item) => item.id === id),
+    ENABLE_DEV_FALLBACK_DATA ? getAllMatchings().find((item) => item.id === id) : undefined,
   );
   const [isLoadingMatching, setIsLoadingMatching] = useState(true);
   const [consultation, setConsultation] = useState<PartnerConsultation | undefined>(() =>
-    id ? getPartnerConsultationByMatchingId(id) : undefined,
+    ENABLE_DEV_FALLBACK_DATA && id ? getPartnerConsultationByMatchingId(id) : undefined,
   );
   const scrollRef = useRef<ScrollView>(null);
   const messageOffsetsRef = useRef<Record<string, number>>({});
@@ -176,6 +189,7 @@ export function ChatScreen({
   const [messages, setMessages] = useState<Message[]>(() =>
     getSeedMessages(matching, consultation),
   );
+  const isApiSession = authSource === 'api' && !!accessToken;
 
   useEffect(() => {
     setViewerRole(initialViewerRole);
@@ -190,7 +204,9 @@ export function ChatScreen({
 
     let isMounted = true;
 
-    const fallbackMatching = getAllMatchings().find((item) => item.id === id);
+    const fallbackMatching = ENABLE_DEV_FALLBACK_DATA
+      ? getAllMatchings().find((item) => item.id === id)
+      : undefined;
 
     const loadMatching = async () => {
       setIsLoadingMatching(true);
@@ -236,7 +252,8 @@ export function ChatScreen({
 
     let isMounted = true;
 
-    const fallbackConsultation = getPartnerConsultationByMatchingId(id);
+    const fallbackConsultation =
+      ENABLE_DEV_FALLBACK_DATA ? getPartnerConsultationByMatchingId(id) : undefined;
 
     const loadConsultation = async () => {
       if (initialViewerRole === 'partner' && authSource === 'api' && accessToken) {
@@ -359,7 +376,7 @@ export function ChatScreen({
       return;
     }
 
-    if (authSource === 'api' && accessToken && id) {
+    if (isApiSession && id) {
       setIsSendingMessage(true);
 
       const request =
@@ -371,6 +388,9 @@ export function ChatScreen({
         .then((response) => {
           setConsultation(mapConsultationResponseToPartnerConsultation(response));
           setInputMessage('');
+        })
+        .catch((error) => {
+          Alert.alert('메시지 전송 실패', getApiErrorMessage(error, '메시지를 보내지 못했어요.'));
         })
         .finally(() => {
           setIsSendingMessage(false);
@@ -434,11 +454,45 @@ export function ChatScreen({
       return;
     }
 
+    const fileName = selectedAsset.fileName ?? `consultation-image-${Date.now()}.jpg`;
+    const mimeType = selectedAsset.mimeType ?? 'image/jpeg';
+
+    if (isApiSession && id) {
+      setIsSendingMessage(true);
+
+      const request =
+        viewerRole === 'partner'
+          ? sendPartnerConsultationImage(accessToken, Number(id), {
+              uri: selectedAsset.uri,
+              name: fileName,
+              mimeType,
+              content: fileName,
+            })
+          : sendCustomerConsultationImage(accessToken, Number(id), {
+              uri: selectedAsset.uri,
+              name: fileName,
+              mimeType,
+              content: fileName,
+            });
+
+      request
+        .then((response) => {
+          setConsultation(mapConsultationResponseToPartnerConsultation(response));
+        })
+        .catch((error) => {
+          Alert.alert('이미지 전송 실패', getApiErrorMessage(error, '이미지를 보내지 못했어요.'));
+        })
+        .finally(() => {
+          setIsSendingMessage(false);
+        });
+      return;
+    }
+
     const imageMessage: Message = {
       id: String(Date.now()),
       senderRole: viewerRole,
       type: 'image',
-      content: selectedAsset.fileName ?? '첨부 사진',
+      content: fileName,
       imageUri: selectedAsset.uri,
       timestamp: new Date(),
     };
@@ -475,13 +529,16 @@ export function ChatScreen({
       return;
     }
 
-    if (authSource === 'api' && accessToken && id) {
+    if (isApiSession && id) {
       setIsSendingMessage(true);
 
       sendCustomerDesiredSchedules(accessToken, Number(id), options)
         .then((response) => {
           setConsultation(mapConsultationResponseToPartnerConsultation(response));
           setShowBookingPicker(false);
+        })
+        .catch((error) => {
+          Alert.alert('일정 전송 실패', getApiErrorMessage(error, '희망 일정을 보내지 못했어요.'));
         })
         .finally(() => {
           setIsSendingMessage(false);
@@ -549,12 +606,15 @@ export function ChatScreen({
       deposit: matching.deposit ?? 5000,
     };
 
-    if (authSource === 'api' && accessToken && id) {
+    if (isApiSession && id) {
       setIsSendingMessage(true);
 
       sendPartnerBookingRequest(accessToken, Number(id), bookingData)
         .then((response) => {
           setConsultation(mapConsultationResponseToPartnerConsultation(response));
+        })
+        .catch((error) => {
+          Alert.alert('예약 요청 실패', getApiErrorMessage(error, '예약 요청을 보내지 못했어요.'));
         })
         .finally(() => {
           setIsSendingMessage(false);
@@ -610,7 +670,7 @@ export function ChatScreen({
   };
 
   const handlePressCloseConsultation = () => {
-    if (authSource === 'api' && accessToken && id) {
+    if (isApiSession && id) {
       Alert.alert('상담 종료', '현재 상담을 종료 상태로 변경할까요?', [
         { text: '취소', style: 'cancel' },
         {
@@ -622,6 +682,9 @@ export function ChatScreen({
               .then((response) => {
                 setConsultation(mapConsultationResponseToPartnerConsultation(response));
               })
+              .catch((error) => {
+                Alert.alert('상담 종료 실패', getApiErrorMessage(error, '상담을 종료하지 못했어요.'));
+              })
               .finally(() => {
                 setIsSendingMessage(false);
               });
@@ -631,7 +694,10 @@ export function ChatScreen({
       return;
     }
 
-    Alert.alert('상담 종료', '이 mock 화면에서는 상담 상태만 종료로 바뀌지는 않아요.');
+    Alert.alert(
+      '상담 종료',
+      '개발용 로컬 상담 화면이라 종료 상태 저장은 아직 서버와 연결되지 않았어요.',
+    );
   };
 
   const handlePaymentComplete = (bookingData: BookingData) => {
@@ -644,13 +710,16 @@ export function ChatScreen({
       return;
     }
 
-    if (authSource === 'api' && accessToken && id) {
+    if (isApiSession && id) {
       setIsSendingMessage(true);
 
       completeCustomerConsultationPayment(accessToken, Number(id))
         .then((response) => {
           setConsultation(mapConsultationResponseToPartnerConsultation(response));
           setSelectedBooking(null);
+        })
+        .catch((error) => {
+          Alert.alert('결제 완료 처리 실패', getApiErrorMessage(error, '결제 완료를 반영하지 못했어요.'));
         })
         .finally(() => {
           setIsSendingMessage(false);
@@ -793,6 +862,15 @@ export function ChatScreen({
             <Text style={styles.noticeSubtext}>{modeDescription}</Text>
           </View>
 
+          {isApiSession ? (
+            <View style={styles.apiInfoBox}>
+              <Ionicons name="information-circle" size={16} color="#1D4ED8" />
+              <Text style={styles.apiInfoText}>
+                현재 API 세션입니다. 텍스트, 이미지, 희망 일정, 예약 요청, 결제 완료가 서버에 저장됩니다.
+              </Text>
+            </View>
+          ) : null}
+
           {!isCustomerViewer && (
             <>
               <ShopChatStatusCard
@@ -898,8 +976,12 @@ export function ChatScreen({
           <Pressable
             accessibilityRole="button"
             onPress={handlePickPhoto}
-            style={styles.iconButton}>
-            <Ionicons name="image-outline" size={22} color="#747B87" />
+            style={[styles.iconButton, isSendingMessage && styles.iconButtonDisabled]}>
+            <Ionicons
+              name="image-outline"
+              size={22}
+              color={isSendingMessage ? '#A0A7B4' : '#747B87'}
+            />
           </Pressable>
 
           {isCustomerViewer && (
@@ -1058,6 +1140,24 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
   },
+  apiInfoBox: {
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  apiInfoText: {
+    flex: 1,
+    color: '#1D4ED8',
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: '700',
+  },
   messageRow: {
     flexDirection: 'row',
     justifyContent: 'flex-start',
@@ -1128,6 +1228,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#F1F3F6',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  iconButtonDisabled: {
+    backgroundColor: '#ECEFF3',
   },
   input: {
     flex: 1,

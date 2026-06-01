@@ -9,6 +9,7 @@ export type ConsultationBookingStatus =
   | 'payment-completed';
 export type ConsultationMessageType =
   | 'text'
+  | 'image'
   | 'desired-schedule'
   | 'partner-schedule-review'
   | 'booking-request';
@@ -20,6 +21,7 @@ export type ConsultationSeedMessage = {
   type: ConsultationMessageType;
   content: string;
   minutesAgo: number;
+  imageUri?: string;
   desiredScheduleOptions?: DesiredScheduleOption[];
   bookingData?: BookingData;
 };

@@ -12,6 +12,7 @@ import {
 } from '@/api/consultations';
 import { useAuth } from '@/auth/mock-auth';
 import { ProtectedRoleScreen } from '@/components/winwin/ProtectedRoleScreen';
+import { ENABLE_DEV_FALLBACK_DATA } from '@/config/app-flags';
 import {
   formatConsultationUpdatedText,
   getMockCustomerConsultations,
@@ -57,7 +58,9 @@ function getStatusColor(tone: ConsultationStatusTone) {
 function CustomerConsultationListContent() {
   const isFocused = useIsFocused();
   const { accessToken, authSource } = useAuth();
-  const [consultations, setConsultations] = useState<PartnerConsultation[]>(getMockCustomerConsultations);
+  const [consultations, setConsultations] = useState<PartnerConsultation[]>(
+    ENABLE_DEV_FALLBACK_DATA ? getMockCustomerConsultations() : [],
+  );
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -80,12 +83,16 @@ function CustomerConsultationListContent() {
           return;
         } catch {
           if (isMounted) {
-            setLoadError('상담 목록 API를 불러오지 못해 일부 mock 상담을 함께 보여주고 있어요.');
+            setLoadError(
+              ENABLE_DEV_FALLBACK_DATA
+                ? '상담 목록 API를 불러오지 못해 일부 상담은 개발용 예시 데이터로 함께 보여주고 있어요.'
+                : '상담 목록 API를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
+            );
           }
         }
       }
 
-      if (isMounted) {
+      if (isMounted && ENABLE_DEV_FALLBACK_DATA) {
         setConsultations(getMockCustomerConsultations());
       }
     };
@@ -104,9 +111,11 @@ function CustomerConsultationListContent() {
       entries.set(matching.id, matching);
     }
 
-    for (const matching of mockMatchings) {
-      if (!entries.has(matching.id)) {
-        entries.set(matching.id, matching);
+    if (ENABLE_DEV_FALLBACK_DATA) {
+      for (const matching of mockMatchings) {
+        if (!entries.has(matching.id)) {
+          entries.set(matching.id, matching);
+        }
       }
     }
 

@@ -7,6 +7,7 @@ import com.winwin.backend.auth.dto.SignupRequest;
 import com.winwin.backend.user.UserRole;
 import java.lang.reflect.Method;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.ResponseEntity;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -37,15 +38,17 @@ class ApiExceptionHandlerTest {
     MockHttpServletRequest servletRequest = new MockHttpServletRequest();
     servletRequest.setRequestURI("/api/auth/signup");
 
-    ApiErrorResponse response =
+    ResponseEntity<ApiErrorResponse> response =
         apiExceptionHandler.handleValidationException(exception, servletRequest);
 
-    assertThat(response.status()).isEqualTo(HttpStatus.BAD_REQUEST.value());
-    assertThat(response.code()).isEqualTo("VALIDATION_ERROR");
-    assertThat(response.message()).isEqualTo("Request validation failed");
-    assertThat(response.path()).isEqualTo("/api/auth/signup");
-    assertThat(response.fieldErrors()).hasSize(3);
-    assertThat(response.fieldErrors()).extracting(ApiErrorResponse.FieldValidationError::field)
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(response.getBody()).isNotNull();
+    assertThat(response.getBody().status()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+    assertThat(response.getBody().code()).isEqualTo("VALIDATION_ERROR");
+    assertThat(response.getBody().message()).isEqualTo("Request validation failed");
+    assertThat(response.getBody().path()).isEqualTo("/api/auth/signup");
+    assertThat(response.getBody().fieldErrors()).hasSize(3);
+    assertThat(response.getBody().fieldErrors()).extracting(ApiErrorResponse.FieldValidationError::field)
         .containsExactly("email", "password", "name");
   }
 
@@ -54,15 +57,17 @@ class ApiExceptionHandlerTest {
     MockHttpServletRequest servletRequest = new MockHttpServletRequest();
     servletRequest.setRequestURI("/api/auth/signup");
 
-    ApiErrorResponse response =
+    ResponseEntity<ApiErrorResponse> response =
         apiExceptionHandler.handleResponseStatusException(
             new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists"),
             servletRequest);
 
-    assertThat(response.status()).isEqualTo(HttpStatus.CONFLICT.value());
-    assertThat(response.code()).isEqualTo("CONFLICT");
-    assertThat(response.message()).isEqualTo("Email already exists");
-    assertThat(response.path()).isEqualTo("/api/auth/signup");
-    assertThat(response.fieldErrors()).isEmpty();
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+    assertThat(response.getBody()).isNotNull();
+    assertThat(response.getBody().status()).isEqualTo(HttpStatus.CONFLICT.value());
+    assertThat(response.getBody().code()).isEqualTo("CONFLICT");
+    assertThat(response.getBody().message()).isEqualTo("Email already exists");
+    assertThat(response.getBody().path()).isEqualTo("/api/auth/signup");
+    assertThat(response.getBody().fieldErrors()).isEmpty();
   }
 }

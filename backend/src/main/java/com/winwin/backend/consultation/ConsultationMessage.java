@@ -45,6 +45,9 @@ public class ConsultationMessage {
   @Column(nullable = false, length = 500)
   private String content;
 
+  @Column(name = "image_url", length = 500)
+  private String imageUrl;
+
   @Column(name = "created_at", nullable = false)
   private LocalDateTime createdAt;
 
@@ -108,6 +111,14 @@ public class ConsultationMessage {
 
   public void setCreatedAt(LocalDateTime createdAt) {
     this.createdAt = createdAt;
+  }
+
+  public String getImageUrl() {
+    return imageUrl;
+  }
+
+  public void setImageUrl(String imageUrl) {
+    this.imageUrl = imageUrl;
   }
 
   public List<ConsultationScheduleOption> getDesiredScheduleOptions() {

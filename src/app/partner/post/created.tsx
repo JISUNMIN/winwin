@@ -37,7 +37,7 @@ export default function PartnerPostCreatedScreen() {
           <Text style={styles.subtitle}>
             {params.source === 'api'
               ? '실제 post API에 공고가 저장되었습니다. 이제 목록 화면에서도 서버 기준으로 다시 불러올 수 있어요.'
-              : '기본 공고 등록 mock 흐름이 완료되었습니다. 나중에는 실제 목록 데이터와 연결할 수 있어요.'}
+              : '개발용 로컬 저장 흐름이 완료되었습니다. 서버 저장 없이도 화면 흐름은 바로 이어서 확인할 수 있어요.'}
           </Text>
 
           <View style={styles.summaryCard}>

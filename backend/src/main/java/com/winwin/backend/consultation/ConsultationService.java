@@ -21,6 +21,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -30,16 +31,19 @@ public class ConsultationService {
   private final ConsultationMessageRepository consultationMessageRepository;
   private final MatchingPostRepository matchingPostRepository;
   private final UserRepository userRepository;
+  private final ConsultationImageStorage consultationImageStorage;
 
   public ConsultationService(
       ConsultationRepository consultationRepository,
       ConsultationMessageRepository consultationMessageRepository,
       MatchingPostRepository matchingPostRepository,
-      UserRepository userRepository) {
+      UserRepository userRepository,
+      ConsultationImageStorage consultationImageStorage) {
     this.consultationRepository = consultationRepository;
     this.consultationMessageRepository = consultationMessageRepository;
     this.matchingPostRepository = matchingPostRepository;
     this.userRepository = userRepository;
+    this.consultationImageStorage = consultationImageStorage;
   }
 
   @Transactional(readOnly = true)
@@ -131,6 +135,35 @@ public class ConsultationService {
         request.options().stream().map(this::toScheduleOption).toList();
 
     appendDesiredScheduleMessage(consultation, options);
+    return toResponse(consultation);
+  }
+
+  @Transactional
+  public ConsultationResponse sendPartnerImageMessage(
+      Long postId, String content, MultipartFile file, AuthenticatedUser authenticatedUser) {
+    requirePartnerRole(authenticatedUser);
+
+    Consultation consultation =
+        consultationRepository
+            .findByPostIdAndPostOwnerId(postId, authenticatedUser.userId())
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Consultation not found"));
+
+    appendImageMessage(consultation, ConsultationSenderRole.PARTNER, content, file, false);
+    return toResponse(consultation);
+  }
+
+  @Transactional
+  public ConsultationResponse sendCustomerImageMessage(
+      Long postId, String content, MultipartFile file, AuthenticatedUser authenticatedUser) {
+    requireCustomerRole(authenticatedUser);
+
+    Consultation consultation =
+        consultationRepository
+            .findByPostIdAndCustomerId(postId, authenticatedUser.userId())
+            .orElseGet(() -> createConsultationForCustomer(postId, authenticatedUser));
+
+    appendImageMessage(consultation, ConsultationSenderRole.CUSTOMER, content, file, true);
     return toResponse(consultation);
   }
 
@@ -280,6 +313,29 @@ public class ConsultationService {
     consultation.setSelectedBooking(null);
   }
 
+  private void appendImageMessage(
+      Consultation consultation,
+      ConsultationSenderRole senderRole,
+      String content,
+      MultipartFile file,
+      boolean incrementsUnreadCount) {
+    validateImageFile(file);
+
+    ConsultationMessage message = new ConsultationMessage();
+    message.setConsultation(consultation);
+    message.setMessageKey("m" + System.currentTimeMillis());
+    message.setSenderRole(senderRole);
+    message.setType(ConsultationMessageType.IMAGE);
+    message.setContent(content != null && !content.trim().isEmpty() ? content.trim() : "첨부 이미지");
+    message.setImageUrl("/uploads" + consultationImageStorage.store(file));
+    message.setCreatedAt(LocalDateTime.now());
+    consultationMessageRepository.save(message);
+
+    consultation.setSummary(senderRole == ConsultationSenderRole.CUSTOMER ? "고객이 이미지를 보냈어요." : "파트너가 이미지를 보냈어요.");
+    consultation.setUpdatedAt(message.getCreatedAt());
+    consultation.setUnreadCount(incrementsUnreadCount ? consultation.getUnreadCount() + 1 : 0);
+  }
+
   private void appendBookingRequestMessage(
       Consultation consultation, ConsultationBookingSelection selection) {
     ConsultationMessage message = new ConsultationMessage();
@@ -371,8 +427,21 @@ public class ConsultationService {
         message.getType().name().toLowerCase().replace('_', '-'),
         message.getContent(),
         message.getCreatedAt().toString(),
+        message.getImageUrl(),
         desiredScheduleOptions,
         toBookingSelectionResponse(message.getBookingData()));
+  }
+
+  private void validateImageFile(MultipartFile file) {
+    if (file == null || file.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Image file is required");
+    }
+
+    String contentType = file.getContentType();
+
+    if (contentType == null || !contentType.startsWith("image/")) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only image upload is supported");
+    }
   }
 
   private ConsultationBookingSelectionResponse toBookingSelectionResponse(

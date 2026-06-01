@@ -45,6 +45,12 @@ export function getApiBaseUrl() {
     return normalizeBaseUrl(configuredBaseUrl);
   }
 
+  if (!__DEV__) {
+    throw new Error(
+      'EXPO_PUBLIC_API_BASE_URL is required for production builds.',
+    );
+  }
+
   if (Platform.OS === 'web') {
     return 'http://localhost:8080';
   }
@@ -61,6 +67,14 @@ export function getApiBaseUrl() {
 function buildUrl(path: string) {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   return `${getApiBaseUrl()}${normalizedPath}`;
+}
+
+export function resolveApiUrl(path: string) {
+  if (/^https?:\/\//i.test(path)) {
+    return path;
+  }
+
+  return buildUrl(path);
 }
 
 export function setUnauthorizedHandler(handler: ((error: ApiError) => void | Promise<void>) | null) {
@@ -96,6 +110,41 @@ export async function requestJson<T>(path: string, init?: RequestInit): Promise<
 
   const response = await fetch(buildUrl(path), {
     ...init,
+    headers,
+  });
+
+  if (!response.ok) {
+    const error = new ApiError(await parseErrorResponse(response));
+
+    if (error.status === 401 && unauthorizedBehavior === 'notify') {
+      await unauthorizedHandler?.(error);
+    }
+
+    throw error;
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  return (await response.json()) as T;
+}
+
+export async function requestMultipart<T>(
+  path: string,
+  formData: FormData,
+  init?: Omit<RequestInit, 'body' | 'headers'> & {
+    headers?: HeadersInit;
+    unauthorizedBehavior?: UnauthorizedBehavior;
+  },
+): Promise<T> {
+  const unauthorizedBehavior = init?.unauthorizedBehavior ?? 'ignore';
+  const headers = new Headers(init?.headers);
+  headers.set('Accept', 'application/json');
+
+  const response = await fetch(resolveApiUrl(path), {
+    ...init,
+    body: formData,
     headers,
   });
 

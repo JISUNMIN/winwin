@@ -8,5 +8,6 @@ public record ConsultationMessageResponse(
     String type,
     String content,
     String createdAt,
+    String imageUrl,
     List<ConsultationScheduleOptionResponse> desiredScheduleOptions,
     ConsultationBookingSelectionResponse bookingData) {}

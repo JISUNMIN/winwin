@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/customer/consultations")
@@ -50,6 +52,15 @@ public class CustomerConsultationController {
       @Valid @RequestBody SendDesiredSchedulesRequest request,
       @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
     return consultationService.sendCustomerDesiredSchedules(postId, request, authenticatedUser);
+  }
+
+  @PostMapping("/{postId}/images")
+  public ConsultationResponse sendCustomerImage(
+      @PathVariable Long postId,
+      @RequestParam("file") MultipartFile file,
+      @RequestParam(value = "content", required = false) String content,
+      @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
+    return consultationService.sendCustomerImageMessage(postId, content, file, authenticatedUser);
   }
 
   @PostMapping("/{postId}/payment-complete")

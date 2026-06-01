@@ -9,6 +9,7 @@ import { getDiscoverablePosts, mapPostResponseToMatching } from '@/api/posts';
 import { roleLabels, useAuth } from '@/auth/mock-auth';
 import { CategoryFilter } from '@/components/winwin/CategoryFilter';
 import { MatchingCard } from '@/components/winwin/MatchingCard';
+import { ENABLE_DEV_FALLBACK_DATA, ENABLE_DEV_ROLE_SWITCH } from '@/config/app-flags';
 import { getDiscoverableMatchings } from '@/data/matchings';
 import type { Category } from '@/data/matchings';
 import { formatFullLocationText } from '@/utils/location-text';
@@ -20,7 +21,9 @@ export default function HomeScreen() {
   const [searchInput, setSearchInput] = useState('');
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<Category>('all');
-  const [matchings, setMatchings] = useState(() => getDiscoverableMatchings());
+  const [matchings, setMatchings] = useState(() =>
+    ENABLE_DEV_FALLBACK_DATA ? getDiscoverableMatchings() : [],
+  );
   const [currentLocation, setCurrentLocation] = useState('위치를 확인해보세요');
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
@@ -90,8 +93,16 @@ export default function HomeScreen() {
         }
       } catch {
         if (isMounted) {
-          setMatchings(getDiscoverableMatchings());
-          setMatchingLoadError('서버 공고를 불러오지 못해 임시 mock 목록을 보여주고 있어요.');
+          if (ENABLE_DEV_FALLBACK_DATA) {
+            setMatchings(getDiscoverableMatchings());
+          } else {
+            setMatchings([]);
+          }
+          setMatchingLoadError(
+            ENABLE_DEV_FALLBACK_DATA
+              ? '서버 공고를 불러오지 못해 임시 mock 목록을 보여주고 있어요.'
+              : '서버 공고를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
+          );
         }
       } finally {
         if (isMounted) {
@@ -181,26 +192,28 @@ export default function HomeScreen() {
               <Text style={styles.accountButtonText}>{isLoggedIn ? '로그아웃' : '로그인'}</Text>
             </Pressable>
 
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => {
-                setShowPartnerMenu(false);
-                setShowDevRoleActions((current) => !current);
-              }}
-              style={[
-                styles.devToggleButton,
-                showDevRoleActions && styles.devToggleButtonActive,
-              ]}>
-              <Text
+            {ENABLE_DEV_ROLE_SWITCH ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => {
+                  setShowPartnerMenu(false);
+                  setShowDevRoleActions((current) => !current);
+                }}
                 style={[
-                  styles.devToggleButtonText,
-                  showDevRoleActions && styles.devToggleButtonTextActive,
+                  styles.devToggleButton,
+                  showDevRoleActions && styles.devToggleButtonActive,
                 ]}>
-                개발용 전환
-              </Text>
-            </Pressable>
+                <Text
+                  style={[
+                    styles.devToggleButtonText,
+                    showDevRoleActions && styles.devToggleButtonTextActive,
+                  ]}>
+                  개발용 전환
+                </Text>
+              </Pressable>
+            ) : null}
 
-            {showDevRoleActions ? (
+            {ENABLE_DEV_ROLE_SWITCH && showDevRoleActions ? (
               <View style={styles.roleQuickActions}>
                 <Pressable
                   accessibilityRole="button"
@@ -227,7 +240,7 @@ export default function HomeScreen() {
                       styles.roleQuickButtonText,
                       role === 'customer' && styles.roleQuickButtonTextActive,
                     ]}>
-                    고객 mock
+                    고객 빠른 전환
                   </Text>
                 </Pressable>
 
@@ -243,7 +256,7 @@ export default function HomeScreen() {
                       styles.roleQuickButtonText,
                       role === 'partner' && styles.roleQuickButtonTextActive,
                     ]}>
-                    파트너 mock
+                    파트너 빠른 전환
                   </Text>
                 </Pressable>
               </View>
@@ -302,7 +315,7 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {showDevRoleActions ? (
+        {ENABLE_DEV_ROLE_SWITCH && showDevRoleActions ? (
           <View style={styles.devNoticeBox}>
             <Text style={styles.devNoticeTitle}>개발용 빠른 전환</Text>
             <Text style={styles.devNoticeText}>

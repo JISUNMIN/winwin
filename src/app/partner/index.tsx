@@ -13,6 +13,7 @@ import {
 import { getPartnerPosts, mapPostResponseToMatching } from '@/api/posts';
 import { useAuth } from '@/auth/mock-auth';
 import { ProtectedRoleScreen } from '@/components/winwin/ProtectedRoleScreen';
+import { ENABLE_DEV_FALLBACK_DATA } from '@/config/app-flags';
 import {
   formatConsultationUpdatedText,
   mockPartnerConsultations,
@@ -91,10 +92,14 @@ function PartnerHomeContent() {
   const isFocused = useIsFocused();
   const { accessToken, authSource } = useAuth();
   const [selectedFilter, setSelectedFilter] = useState<FilterKey>('all');
-  const [postedMatchings, setPostedMatchings] = useState(() => getPostedMatchings());
+  const [postedMatchings, setPostedMatchings] = useState(() =>
+    ENABLE_DEV_FALLBACK_DATA ? getPostedMatchings() : [],
+  );
   const [isLoadingPosts, setIsLoadingPosts] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [consultations, setConsultations] = useState<PartnerConsultation[]>(mockPartnerConsultations);
+  const [consultations, setConsultations] = useState<PartnerConsultation[]>(
+    ENABLE_DEV_FALLBACK_DATA ? mockPartnerConsultations : [],
+  );
 
   useEffect(() => {
     if (!isFocused) {
@@ -118,7 +123,11 @@ function PartnerHomeContent() {
           return;
         } catch {
           if (isMounted) {
-            setLoadError('서버 공고를 불러오지 못해 상담 카드는 일부 mock 정보를 함께 보여주고 있어요.');
+            setLoadError(
+              ENABLE_DEV_FALLBACK_DATA
+                ? '서버 공고를 불러오지 못해 상담 카드 일부에 개발용 예시 정보를 함께 보여주고 있어요.'
+                : '서버 공고를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
+            );
           }
         } finally {
           if (isMounted) {
@@ -127,7 +136,7 @@ function PartnerHomeContent() {
         }
       }
 
-      if (isMounted) {
+      if (isMounted && ENABLE_DEV_FALLBACK_DATA) {
         setPostedMatchings(getPostedMatchings());
         setIsLoadingPosts(false);
       }
@@ -159,13 +168,15 @@ function PartnerHomeContent() {
         } catch {
           if (isMounted) {
             setLoadError(
-              '상담 목록 API를 불러오지 못해 일부 상담은 mock 데이터로 보여주고 있어요.',
+              ENABLE_DEV_FALLBACK_DATA
+                ? '상담 목록 API를 불러오지 못해 일부 상담은 개발용 예시 데이터로 보여주고 있어요.'
+                : '상담 목록 API를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
             );
           }
         }
       }
 
-      if (isMounted) {
+      if (isMounted && ENABLE_DEV_FALLBACK_DATA) {
         setConsultations(mockPartnerConsultations);
       }
     };
@@ -184,9 +195,11 @@ function PartnerHomeContent() {
       entries.set(matching.id, matching);
     }
 
-    for (const matching of mockMatchings) {
-      if (!entries.has(matching.id)) {
-        entries.set(matching.id, matching);
+    if (ENABLE_DEV_FALLBACK_DATA) {
+      for (const matching of mockMatchings) {
+        if (!entries.has(matching.id)) {
+          entries.set(matching.id, matching);
+        }
       }
     }
 

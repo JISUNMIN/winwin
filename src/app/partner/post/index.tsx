@@ -13,6 +13,7 @@ import {
 } from '@/api/posts';
 import { useAuth } from '@/auth/mock-auth';
 import { ProtectedRoleScreen } from '@/components/winwin/ProtectedRoleScreen';
+import { ENABLE_DEV_FALLBACK_DATA } from '@/config/app-flags';
 import { consumePostFeedbackMessage } from '@/data/post-feedback';
 import {
   formatKoreanDate,
@@ -57,7 +58,9 @@ export default function ShopPostManageScreen() {
 function ShopPostManageContent() {
   const isFocused = useIsFocused();
   const { accessToken, authSource } = useAuth();
-  const [postedMatchings, setPostedMatchings] = useState(() => getPostedMatchings());
+  const [postedMatchings, setPostedMatchings] = useState(() =>
+    ENABLE_DEV_FALLBACK_DATA ? getPostedMatchings() : [],
+  );
   const [selectedFilter, setSelectedFilter] = useState<FilterKey>('all');
   const [selectedSort, setSelectedSort] = useState<SortKey>('latest');
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
@@ -86,12 +89,16 @@ function ShopPostManageContent() {
           return;
         } catch {
           if (isMounted) {
-            setLoadError('서버 공고 목록을 불러오지 못해 임시 mock 목록을 보여주고 있어요.');
+            setLoadError(
+              ENABLE_DEV_FALLBACK_DATA
+                ? '서버 공고 목록을 불러오지 못해 임시 mock 목록을 보여주고 있어요.'
+                : '서버 공고 목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
+            );
           }
         }
       }
 
-      if (isMounted) {
+      if (isMounted && ENABLE_DEV_FALLBACK_DATA) {
         setPostedMatchings(getPostedMatchings());
       }
     };

@@ -1,6 +1,5 @@
 package com.winwin.backend.api;
 
-import java.util.Map;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -9,8 +8,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api")
 public class HealthController {
 
+  private final HealthStatusService healthStatusService;
+
+  public HealthController(HealthStatusService healthStatusService) {
+    this.healthStatusService = healthStatusService;
+  }
+
   @GetMapping("/health")
-  public Map<String, String> health() {
-    return Map.of("status", "ok", "service", "winwin-backend");
+  public HealthStatusService.HealthResponse health() {
+    return healthStatusService.getHealth();
   }
 }

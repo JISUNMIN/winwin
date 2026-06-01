@@ -1,4 +1,4 @@
-import { requestJson } from '@/api/http';
+import { requestJson, requestMultipart, resolveApiUrl } from '@/api/http';
 import type {
   ConsultationBookingStatus,
   ConsultationMessageType,
@@ -24,6 +24,7 @@ type ConsultationApiMessage = {
   type: ConsultationMessageType;
   content: string;
   createdAt: string;
+  imageUrl: string | null;
   desiredScheduleOptions: ConsultationApiScheduleOption[] | null;
   bookingData: ConsultationApiBookingSelection | null;
 };
@@ -171,6 +172,71 @@ export function closePartnerConsultation(
   } as RequestInit & { unauthorizedBehavior: 'notify' });
 }
 
+type UploadConsultationImageInput = {
+  uri: string;
+  name: string;
+  mimeType: string;
+  content?: string;
+};
+
+export function sendCustomerConsultationImage(
+  accessToken: string,
+  postId: number,
+  image: UploadConsultationImageInput,
+) {
+  const formData = new FormData();
+  formData.append('file', {
+    uri: image.uri,
+    name: image.name,
+    type: image.mimeType,
+  } as unknown as Blob);
+
+  if (image.content?.trim()) {
+    formData.append('content', image.content.trim());
+  }
+
+  return requestMultipart<ConsultationResponse>(
+    `/api/customer/consultations/${postId}/images`,
+    formData,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      unauthorizedBehavior: 'notify',
+    },
+  );
+}
+
+export function sendPartnerConsultationImage(
+  accessToken: string,
+  postId: number,
+  image: UploadConsultationImageInput,
+) {
+  const formData = new FormData();
+  formData.append('file', {
+    uri: image.uri,
+    name: image.name,
+    type: image.mimeType,
+  } as unknown as Blob);
+
+  if (image.content?.trim()) {
+    formData.append('content', image.content.trim());
+  }
+
+  return requestMultipart<ConsultationResponse>(
+    `/api/partner/consultations/${postId}/images`,
+    formData,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      unauthorizedBehavior: 'notify',
+    },
+  );
+}
+
 function toMinutesAgo(createdAt: string) {
   const diff = Math.floor((Date.now() - new Date(createdAt).getTime()) / 60000);
   return Math.max(1, diff);
@@ -199,6 +265,7 @@ export function mapConsultationResponseToPartnerConsultation(
       type: message.type,
       content: message.content,
       minutesAgo: toMinutesAgo(message.createdAt),
+      imageUri: message.imageUrl ? resolveApiUrl(message.imageUrl) : undefined,
       desiredScheduleOptions: message.desiredScheduleOptions ?? undefined,
       bookingData: message.bookingData ?? undefined,
     })),
