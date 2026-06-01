@@ -69,4 +69,11 @@ public class PartnerConsultationController {
       @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
     return consultationService.closePartnerConsultation(postId, authenticatedUser);
   }
+
+  @PostMapping("/{postId}/confirm-transfer")
+  public ConsultationResponse confirmPartnerTransfer(
+      @PathVariable Long postId,
+      @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
+    return consultationService.confirmPartnerTransfer(postId, authenticatedUser);
+  }
 }

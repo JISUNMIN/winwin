@@ -179,14 +179,20 @@ public class ConsultationService {
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Consultation not found"));
 
     ConsultationBookingSelection selection =
-        new ConsultationBookingSelection(request.date(), request.time().trim(), request.deposit());
+        new ConsultationBookingSelection(
+            request.date(),
+            request.time().trim(),
+            request.deposit(),
+            "국민은행",
+            createAccountNumber(postId, request.deposit()),
+            consultation.getPost().getOwner().getName());
 
     appendBookingRequestMessage(consultation, selection);
     return toResponse(consultation);
   }
 
   @Transactional
-  public ConsultationResponse completeCustomerPayment(
+  public ConsultationResponse reportCustomerTransfer(
       Long postId, AuthenticatedUser authenticatedUser) {
     requireCustomerRole(authenticatedUser);
 
@@ -200,10 +206,32 @@ public class ConsultationService {
 
     if (selectedBooking == null) {
       throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, "Booking request is required before payment completion");
+          HttpStatus.BAD_REQUEST, "Booking request is required before transfer reporting");
     }
 
-    appendPaymentCompletedMessage(consultation, selectedBooking);
+    appendTransferReportedMessage(consultation, selectedBooking);
+    return toResponse(consultation);
+  }
+
+  @Transactional
+  public ConsultationResponse confirmPartnerTransfer(
+      Long postId, AuthenticatedUser authenticatedUser) {
+    requirePartnerRole(authenticatedUser);
+
+    Consultation consultation =
+        consultationRepository
+            .findByPostIdAndPostOwnerId(postId, authenticatedUser.userId())
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Consultation not found"));
+
+    ConsultationBookingSelection selectedBooking = consultation.getSelectedBooking();
+
+    if (selectedBooking == null) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "Booking request is required before confirmation");
+    }
+
+    appendTransferConfirmedMessage(consultation, selectedBooking);
     return toResponse(consultation);
   }
 
@@ -348,16 +376,16 @@ public class ConsultationService {
     message.setBookingData(selection);
     consultationMessageRepository.save(message);
 
-    consultation.setStatusLabel("결제대기");
+    consultation.setStatusLabel("입금대기");
     consultation.setStatusTone(ConsultationStatusTone.PAYMENT);
-    consultation.setSummary("예약 요청을 보낸 상태예요. 고객 결제 완료 여부를 확인해보세요.");
+    consultation.setSummary("예약금 계좌이체 안내를 보낸 상태예요. 고객 입금 알림을 기다려보세요.");
     consultation.setUpdatedAt(message.getCreatedAt());
     consultation.setUnreadCount(0);
     consultation.setBookingStatus(ConsultationBookingStatus.BOOKING_REQUEST_SENT);
     consultation.setSelectedBooking(selection);
   }
 
-  private void appendPaymentCompletedMessage(
+  private void appendTransferReportedMessage(
       Consultation consultation, ConsultationBookingSelection selection) {
     ConsultationMessage message = new ConsultationMessage();
     message.setConsultation(consultation);
@@ -368,16 +396,40 @@ public class ConsultationService {
         selection.getDate()
             + " "
             + selection.getTime()
-            + " 예약을 확정했어요. 보증금 결제도 완료했습니다.");
+            + " 예약금 입금했습니다. 확인 부탁드려요.");
+    message.setCreatedAt(LocalDateTime.now());
+    consultationMessageRepository.save(message);
+
+    consultation.setStatusLabel("입금확인중");
+    consultation.setStatusTone(ConsultationStatusTone.PAYMENT);
+    consultation.setSummary("고객이 예약금 입금 알림을 보냈어요. 실제 입금 확인 후 예약을 확정하세요.");
+    consultation.setUpdatedAt(message.getCreatedAt());
+    consultation.setUnreadCount(consultation.getUnreadCount() + 1);
+    consultation.setBookingStatus(ConsultationBookingStatus.TRANSFER_REPORTED);
+    consultation.setSelectedBooking(selection);
+  }
+
+  private void appendTransferConfirmedMessage(
+      Consultation consultation, ConsultationBookingSelection selection) {
+    ConsultationMessage message = new ConsultationMessage();
+    message.setConsultation(consultation);
+    message.setMessageKey("m" + System.currentTimeMillis());
+    message.setSenderRole(ConsultationSenderRole.PARTNER);
+    message.setType(ConsultationMessageType.TEXT);
+    message.setContent(
+        selection.getDate()
+            + " "
+            + selection.getTime()
+            + " 예약금 입금 확인되었습니다. 예약이 확정되었어요.");
     message.setCreatedAt(LocalDateTime.now());
     consultationMessageRepository.save(message);
 
     consultation.setStatusLabel("확정");
     consultation.setStatusTone(ConsultationStatusTone.CONFIRMED);
-    consultation.setSummary("보증금 결제가 완료됐어요. 방문 전 최종 안내만 남았습니다.");
+    consultation.setSummary("예약금 입금이 확인되어 예약이 확정됐어요. 방문 전 최종 안내만 남았습니다.");
     consultation.setUpdatedAt(message.getCreatedAt());
-    consultation.setUnreadCount(consultation.getUnreadCount() + 1);
-    consultation.setBookingStatus(ConsultationBookingStatus.PAYMENT_COMPLETED);
+    consultation.setUnreadCount(0);
+    consultation.setBookingStatus(ConsultationBookingStatus.CONFIRMED);
     consultation.setSelectedBooking(selection);
   }
 
@@ -389,6 +441,11 @@ public class ConsultationService {
     if (consultation.getUnreadCount() != null && consultation.getUnreadCount() > 0) {
       consultation.setUnreadCount(0);
     }
+  }
+
+  private String createAccountNumber(Long postId, Integer deposit) {
+    long seed = Math.abs((postId * 137L) + (deposit == null ? 0 : deposit));
+    return "110-2482-" + String.format("%04d", seed % 10000);
   }
 
   private ConsultationResponse toResponse(Consultation consultation) {
@@ -451,6 +508,11 @@ public class ConsultationService {
     }
 
     return new ConsultationBookingSelectionResponse(
-        selection.getDate().toString(), selection.getTime(), selection.getDeposit());
+        selection.getDate().toString(),
+        selection.getTime(),
+        selection.getDeposit(),
+        selection.getBankName(),
+        selection.getAccountNumber(),
+        selection.getAccountHolder());
   }
 }

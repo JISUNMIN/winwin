@@ -34,7 +34,7 @@ const statusFilterOptions: { key: FilterKey; label: string }[] = [
   { key: 'all', label: '전체' },
   { key: 'waiting', label: '대기' },
   { key: 'review', label: '검토중' },
-  { key: 'payment', label: '결제대기' },
+  { key: 'payment', label: '입금대기' },
   { key: 'confirmed', label: '확정' },
   { key: 'closed', label: '종료' },
 ];
@@ -291,7 +291,7 @@ function PartnerHomeContent() {
           </View>
 
           <View style={styles.summaryCard}>
-            <Text style={styles.summaryLabel}>결제 대기</Text>
+            <Text style={styles.summaryLabel}>입금 대기</Text>
             <Text style={styles.summaryValue}>{paymentPendingCount}건</Text>
           </View>
 

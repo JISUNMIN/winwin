@@ -179,10 +179,10 @@ export default function MatchingDetailScreen() {
               <Ionicons name="shield-checkmark-outline" size={22} color="#2563EB" />
             </View>
             <View style={styles.depositContent}>
-              <Text style={styles.depositTitle}>노쇼 방지 보증금</Text>
+              <Text style={styles.depositTitle}>예약금 안내</Text>
               <Text style={styles.depositValue}>{matching.deposit.toLocaleString()}원</Text>
               <Text style={styles.depositDescription}>
-                예약 시 보증금을 결제하며, 시술 완료 후 전액 환불됩니다.
+                예약금은 샵 계좌로 직접 입금하며, 송금과 환불 책임은 샵과 고객에게 있습니다.
               </Text>
             </View>
           </View>

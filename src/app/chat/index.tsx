@@ -175,7 +175,7 @@ function CustomerConsultationListContent() {
           </View>
 
           <View style={styles.summaryCard}>
-            <Text style={styles.summaryLabel}>결제 대기</Text>
+            <Text style={styles.summaryLabel}>입금 대기</Text>
             <Text style={styles.summaryValue}>{paymentPendingCount}건</Text>
           </View>
         </View>

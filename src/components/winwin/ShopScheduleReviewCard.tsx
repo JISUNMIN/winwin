@@ -55,7 +55,7 @@ export function ShopScheduleReviewCard({
 
       <View style={styles.noticeBox}>
         <Text style={styles.noticeText}>
-          예약 요청에는 보증금 {deposit.toLocaleString()}원이 함께 안내됩니다.
+          예약 요청에는 예약금 {deposit.toLocaleString()}원이 함께 안내됩니다.
         </Text>
       </View>
     </View>

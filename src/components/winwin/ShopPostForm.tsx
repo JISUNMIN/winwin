@@ -541,7 +541,7 @@ export function ShopPostForm({
           ) : null}
           <Text style={styles.inputHint}>가능 날짜는 최소 1개 이상 선택해야 합니다.</Text>
 
-          <Text style={styles.inputLabel}>보증금</Text>
+          <Text style={styles.inputLabel}>예약금</Text>
           <TextInput
             value={deposit}
             onChangeText={setDeposit}

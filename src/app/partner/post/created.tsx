@@ -49,7 +49,7 @@ export default function PartnerPostCreatedScreen() {
             <Text style={styles.summaryItem}>위치 공개 방식: {params.locationVisibility ?? '-'}</Text>
             <Text style={styles.summaryItem}>지원 조건 수: {params.requirementCount ?? '0'}개</Text>
             <Text style={styles.summaryItem}>가능 날짜 수: {params.dateCount ?? '0'}개</Text>
-            <Text style={styles.summaryItem}>보증금: {(params.deposit ?? '0').toString()}원</Text>
+            <Text style={styles.summaryItem}>예약금: {(params.deposit ?? '0').toString()}원</Text>
           </View>
 
           <View style={styles.buttonGroup}>

@@ -7,18 +7,29 @@ export type BookingData = {
   date: string;
   time: string;
   deposit: number;
+  bankName: string;
+  accountNumber: string;
+  accountHolder: string;
 };
 
 type BookingRequestCardProps = {
   bookingData: BookingData;
-  canAccept?: boolean;
-  onAccept?: (bookingData: BookingData) => void;
+  canReportTransfer?: boolean;
+  canConfirmTransfer?: boolean;
+  isTransferReported?: boolean;
+  isConfirmed?: boolean;
+  onReportTransfer?: (bookingData: BookingData) => void;
+  onConfirmTransfer?: (bookingData: BookingData) => void;
 };
 
 export function BookingRequestCard({
   bookingData,
-  canAccept = true,
-  onAccept,
+  canReportTransfer = false,
+  canConfirmTransfer = false,
+  isTransferReported = false,
+  isConfirmed = false,
+  onReportTransfer,
+  onConfirmTransfer,
 }: BookingRequestCardProps) {
   return (
     <View style={styles.card}>
@@ -42,30 +53,58 @@ export function BookingRequestCard({
 
         <View style={styles.infoRow}>
           <Ionicons name="card-outline" size={16} color="#747B87" />
+          <Text style={styles.infoText}>예약금 {bookingData.deposit.toLocaleString()}원</Text>
+        </View>
+
+        <View style={styles.infoRow}>
+          <Ionicons name="business-outline" size={16} color="#747B87" />
           <Text style={styles.infoText}>
-            보증금 {bookingData.deposit.toLocaleString()}원
+            {bookingData.bankName} {bookingData.accountNumber}
           </Text>
+        </View>
+
+        <View style={styles.infoRow}>
+          <Ionicons name="person-outline" size={16} color="#747B87" />
+          <Text style={styles.infoText}>예금주 {bookingData.accountHolder}</Text>
         </View>
       </View>
 
       <View style={styles.noticeBox}>
         <Text style={styles.noticeText}>
-          보증금 결제 후 예약이 확정됩니다. 시술 완료 후 보증금은 전액 환불돼요.
+          예약금은 샵 계좌로 직접 입금합니다. 송금과 환불 책임은 샵과 고객에게 있으며, WinWin은 이에 대한 책임을 지지 않습니다.
         </Text>
       </View>
 
-      {canAccept ? (
+      {canConfirmTransfer ? (
         <Pressable
           accessibilityRole="button"
-          onPress={() => onAccept?.(bookingData)}
+          onPress={() => onConfirmTransfer?.(bookingData)}
           style={styles.acceptButton}>
           <Ionicons name="checkmark-circle-outline" size={18} color="#FFFFFF" />
-          <Text style={styles.acceptButtonText}>예약 확정 및 결제하기</Text>
+          <Text style={styles.acceptButtonText}>입금 확인 후 예약 확정</Text>
         </Pressable>
+      ) : canReportTransfer ? (
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => onReportTransfer?.(bookingData)}
+          style={styles.acceptButton}>
+          <Ionicons name="wallet-outline" size={18} color="#FFFFFF" />
+          <Text style={styles.acceptButtonText}>계좌 확인 후 입금했어요</Text>
+        </Pressable>
+      ) : isConfirmed ? (
+        <View style={styles.pendingBox}>
+          <Ionicons name="checkmark-circle" size={16} color="#2563EB" />
+          <Text style={styles.pendingText}>예약이 확정되었습니다.</Text>
+        </View>
+      ) : isTransferReported ? (
+        <View style={styles.pendingBox}>
+          <Ionicons name="time-outline" size={16} color="#2563EB" />
+          <Text style={styles.pendingText}>샵이 실제 입금을 확인하면 예약이 확정됩니다.</Text>
+        </View>
       ) : (
         <View style={styles.pendingBox}>
           <Ionicons name="time-outline" size={16} color="#2563EB" />
-          <Text style={styles.pendingText}>고객이 결제를 완료하면 예약이 확정됩니다.</Text>
+          <Text style={styles.pendingText}>고객이 예약금 입금 후 알려주면 예약이 확정됩니다.</Text>
         </View>
       )}
     </View>

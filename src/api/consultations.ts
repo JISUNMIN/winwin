@@ -16,6 +16,9 @@ type ConsultationApiBookingSelection = {
   date: string;
   time: string;
   deposit: number;
+  bankName: string;
+  accountNumber: string;
+  accountHolder: string;
 };
 
 type ConsultationApiMessage = {
@@ -136,21 +139,33 @@ export function sendPartnerBookingRequest(
   postId: number,
   bookingData: ConsultationApiBookingSelection,
 ) {
+  const { date, time, deposit } = bookingData;
+
   return requestJson<ConsultationResponse>(`/api/partner/consultations/${postId}/booking-request`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify(bookingData),
+    body: JSON.stringify({ date, time, deposit }),
     unauthorizedBehavior: 'notify',
   } as RequestInit & { unauthorizedBehavior: 'notify' });
 }
 
-export function completeCustomerConsultationPayment(
+export function reportCustomerConsultationTransfer(
   accessToken: string,
   postId: number,
 ) {
-  return requestJson<ConsultationResponse>(`/api/customer/consultations/${postId}/payment-complete`, {
+  return requestJson<ConsultationResponse>(`/api/customer/consultations/${postId}/transfer-reported`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    unauthorizedBehavior: 'notify',
+  } as RequestInit & { unauthorizedBehavior: 'notify' });
+}
+
+export function confirmPartnerConsultationTransfer(accessToken: string, postId: number) {
+  return requestJson<ConsultationResponse>(`/api/partner/consultations/${postId}/confirm-transfer`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${accessToken}`,

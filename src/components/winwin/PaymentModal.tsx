@@ -1,21 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import type { ComponentProps } from 'react';
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { BookingData } from '@/components/winwin/BookingRequestCard';
 import { formatKoreanDate } from '@/data/matchings';
-
-type PaymentMethod = 'card' | 'kakao' | 'toss';
-type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
 type PaymentModalProps = {
   visible: boolean;
@@ -25,16 +13,6 @@ type PaymentModalProps = {
   onComplete: (bookingData: BookingData) => void;
 };
 
-const paymentMethods: Array<{
-  id: PaymentMethod;
-  name: string;
-  icon: IoniconName;
-}> = [
-  { id: 'card', name: '신용/체크카드', icon: 'card-outline' },
-  { id: 'kakao', name: '카카오페이', icon: 'chatbubble-outline' },
-  { id: 'toss', name: '토스', icon: 'phone-portrait-outline' },
-];
-
 export function PaymentModal({
   visible,
   bookingData,
@@ -42,35 +20,24 @@ export function PaymentModal({
   onClose,
   onComplete,
 }: PaymentModalProps) {
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('card');
-  const [isProcessing, setIsProcessing] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
 
   const handleClose = () => {
-    if (isProcessing) {
-      return;
-    }
-
     setIsCompleted(false);
     onClose();
   };
 
-  const handlePayment = () => {
-    if (!bookingData || isProcessing) {
+  const handleTransferReported = () => {
+    if (!bookingData) {
       return;
     }
 
-    setIsProcessing(true);
+    setIsCompleted(true);
 
     setTimeout(() => {
-      setIsProcessing(false);
-      setIsCompleted(true);
-
-      setTimeout(() => {
-        setIsCompleted(false);
-        onComplete(bookingData);
-      }, 800);
-    }, 1000);
+      setIsCompleted(false);
+      onComplete(bookingData);
+    }, 800);
   };
 
   if (!bookingData) {
@@ -82,16 +49,13 @@ export function PaymentModal({
       <View style={styles.overlay}>
         <View style={styles.modal}>
           <View style={styles.header}>
-            <Text style={styles.title}>보증금 결제</Text>
+            <Text style={styles.title}>예약금 입금 안내</Text>
             <Pressable
               accessibilityLabel="닫기"
               accessibilityRole="button"
-              disabled={isProcessing || isCompleted}
+              disabled={isCompleted}
               onPress={handleClose}
-              style={[
-                styles.closeButton,
-                (isProcessing || isCompleted) && styles.closeButtonDisabled,
-              ]}>
+              style={[styles.closeButton, isCompleted && styles.closeButtonDisabled]}>
               <Ionicons name="close" size={22} color="#15181D" />
             </Pressable>
           </View>
@@ -101,8 +65,8 @@ export function PaymentModal({
               <View style={styles.completedIcon}>
                 <Ionicons name="checkmark" size={44} color="#16A34A" />
               </View>
-              <Text style={styles.completedTitle}>결제 완료</Text>
-              <Text style={styles.completedText}>예약이 확정되었습니다.</Text>
+              <Text style={styles.completedTitle}>입금 알림 완료</Text>
+              <Text style={styles.completedText}>샵이 실제 입금을 확인하면 예약이 확정됩니다.</Text>
             </View>
           ) : (
             <ScrollView contentContainerStyle={styles.content}>
@@ -129,61 +93,47 @@ export function PaymentModal({
 
               <View style={styles.depositBox}>
                 <View>
-                  <Text style={styles.depositLabel}>노쇼 방지 보증금</Text>
-                  <Text style={styles.depositDescription}>
-                    시술 완료 후 전액 환불됩니다.
-                  </Text>
+                  <Text style={styles.depositLabel}>예약금</Text>
+                  <Text style={styles.depositDescription}>샵에서 안내한 계좌로 직접 입금해 주세요.</Text>
                 </View>
-                <Text style={styles.depositValue}>
-                  {bookingData.deposit.toLocaleString()}원
-                </Text>
+                <Text style={styles.depositValue}>{bookingData.deposit.toLocaleString()}원</Text>
               </View>
 
-              <View>
-                <Text style={styles.sectionTitle}>결제 수단</Text>
-                <View style={styles.methodList}>
-                  {paymentMethods.map((method) => {
-                    const isSelected = selectedMethod === method.id;
+              <View style={styles.accountBox}>
+                <Text style={styles.sectionTitle}>입금 계좌</Text>
 
-                    return (
-                      <Pressable
-                        accessibilityRole="button"
-                        key={method.id}
-                        onPress={() => setSelectedMethod(method.id)}
-                        style={[styles.methodButton, isSelected && styles.methodButtonSelected]}>
-                        <Ionicons name={method.icon} size={22} color="#15181D" />
-                        <Text style={styles.methodText}>{method.name}</Text>
-                        {isSelected && (
-                          <Ionicons name="checkmark-circle" size={22} color="#6D5DFB" />
-                        )}
-                      </Pressable>
-                    );
-                  })}
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>은행</Text>
+                  <Text style={styles.infoValue}>{bookingData.bankName}</Text>
+                </View>
+
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>계좌번호</Text>
+                  <Text style={styles.infoValue}>{bookingData.accountNumber}</Text>
+                </View>
+
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>예금주</Text>
+                  <Text style={styles.infoValue}>{bookingData.accountHolder}</Text>
                 </View>
               </View>
 
               <View style={styles.policyBox}>
-                <Text style={styles.policyTitle}>환불 안내</Text>
-                <Text style={styles.policyText}>시술 완료 후 24시간 이내 자동 환불</Text>
-                <Text style={styles.policyText}>예약 시간 24시간 전 취소 시 전액 환불</Text>
-                <Text style={styles.policyText}>노쇼 시 보증금 환불 불가</Text>
+                <Text style={styles.policyTitle}>안내</Text>
+                <Text style={styles.policyText}>예약금 송금은 샵과 고객이 직접 진행합니다.</Text>
+                <Text style={styles.policyText}>
+                  WinWin은 계좌이체, 환불, 분쟁에 대한 책임을 지지 않습니다.
+                </Text>
+                <Text style={styles.policyText}>
+                  입금 후 이 화면에서 알리면, 파트너가 실제 입금을 확인한 뒤 예약을 확정합니다.
+                </Text>
               </View>
 
               <Pressable
                 accessibilityRole="button"
-                disabled={isProcessing}
-                onPress={handlePayment}
-                style={[styles.payButton, isProcessing && styles.payButtonDisabled]}>
-                {isProcessing ? (
-                  <View style={styles.processingRow}>
-                    <ActivityIndicator color="#FFFFFF" />
-                    <Text style={styles.payButtonText}>결제 처리 중...</Text>
-                  </View>
-                ) : (
-                  <Text style={styles.payButtonText}>
-                    {bookingData.deposit.toLocaleString()}원 결제하기
-                  </Text>
-                )}
+                onPress={handleTransferReported}
+                style={styles.payButton}>
+                <Text style={styles.payButtonText}>입금했고 확인 요청할게요</Text>
               </Pressable>
             </ScrollView>
           )}
@@ -296,30 +246,13 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '900',
   },
-  methodList: {
-    marginTop: 10,
-    gap: 8,
-  },
-  methodButton: {
-    minHeight: 50,
-    borderRadius: 14,
+  accountBox: {
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: '#E1E4EA',
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
+    padding: 14,
     gap: 10,
-  },
-  methodButtonSelected: {
-    borderColor: '#6D5DFB',
-    backgroundColor: '#F7F5FF',
-  },
-  methodText: {
-    flex: 1,
-    color: '#15181D',
-    fontSize: 14,
-    fontWeight: '800',
   },
   policyBox: {
     borderRadius: 14,
@@ -345,14 +278,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#6D5DFB',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  payButtonDisabled: {
-    opacity: 0.72,
-  },
-  processingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 9,
   },
   payButtonText: {
     color: '#FFFFFF',

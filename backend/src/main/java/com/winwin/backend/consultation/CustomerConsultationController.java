@@ -63,10 +63,17 @@ public class CustomerConsultationController {
     return consultationService.sendCustomerImageMessage(postId, content, file, authenticatedUser);
   }
 
-  @PostMapping("/{postId}/payment-complete")
-  public ConsultationResponse completeCustomerPayment(
+  @PostMapping("/{postId}/transfer-reported")
+  public ConsultationResponse reportCustomerTransfer(
       @PathVariable Long postId,
       @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
-    return consultationService.completeCustomerPayment(postId, authenticatedUser);
+    return consultationService.reportCustomerTransfer(postId, authenticatedUser);
+  }
+
+  @PostMapping("/{postId}/payment-complete")
+  public ConsultationResponse completeCustomerPaymentAlias(
+      @PathVariable Long postId,
+      @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
+    return consultationService.reportCustomerTransfer(postId, authenticatedUser);
   }
 }

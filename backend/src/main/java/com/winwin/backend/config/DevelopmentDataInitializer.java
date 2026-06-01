@@ -209,13 +209,19 @@ public class DevelopmentDataInitializer {
           post2,
           customer2,
           "손톱 길이 충분, 주말 오전 선호",
-          "결제대기",
+          "입금대기",
           ConsultationStatusTone.PAYMENT,
-          "예약 요청을 보낸 상태예요. 고객 결제 완료 여부를 확인해보세요.",
+          "예약금 계좌이체 안내를 보낸 상태예요. 고객 입금 알림을 기다려보세요.",
           1,
           ConsultationBookingStatus.BOOKING_REQUEST_SENT,
           2,
-          new ConsultationBookingSelection(LocalDate.of(2026, 4, 27), "11:00", 3000),
+          new ConsultationBookingSelection(
+              LocalDate.of(2026, 4, 27),
+              "11:00",
+              3000,
+              "국민은행",
+              "110-2482-3000",
+              "네일샵 러블리"),
           LocalDateTime.of(2026, 4, 28, 12, 15),
           List.of(
               message("m1", ConsultationSenderRole.PARTNER, ConsultationMessageType.TEXT,
@@ -231,7 +237,7 @@ public class DevelopmentDataInitializer {
                       new ConsultationScheduleOption(LocalDate.of(2026, 4, 26), "10:00"),
                       new ConsultationScheduleOption(LocalDate.of(2026, 4, 27), "11:00"))),
               message("m3", ConsultationSenderRole.PARTNER, ConsultationMessageType.TEXT,
-                  "4월 27일 11시 일정으로 가능해요. 아래 요청에서 예약을 확정해주세요.",
+                  "4월 27일 11시 일정으로 가능해요. 아래 계좌 안내를 확인하고 예약금을 입금해 주세요.",
                   LocalDateTime.of(2026, 4, 28, 10, 55)),
               messageWithBooking(
                   "m4",
@@ -239,9 +245,15 @@ public class DevelopmentDataInitializer {
                   ConsultationMessageType.BOOKING_REQUEST,
                   "예약 확정 요청을 보냈습니다.",
                   LocalDateTime.of(2026, 4, 28, 10, 56),
-                  new ConsultationBookingSelection(LocalDate.of(2026, 4, 27), "11:00", 3000)),
+                  new ConsultationBookingSelection(
+                      LocalDate.of(2026, 4, 27),
+                      "11:00",
+                      3000,
+                      "국민은행",
+                      "110-2482-3000",
+                      "네일샵 러블리")),
               message("m5", ConsultationSenderRole.CUSTOMER, ConsultationMessageType.TEXT,
-                  "확인했어요. 잠시 후 결제할게요.",
+                  "계좌 확인했어요. 입금 후 다시 알릴게요.",
                   LocalDateTime.of(2026, 4, 28, 11, 1))));
 
       seedConsultation(
@@ -252,11 +264,17 @@ public class DevelopmentDataInitializer {
           "명동 방문 경험 있음, 체크인 시간 조율 요청",
           "확정",
           ConsultationStatusTone.CONFIRMED,
-          "보증금 결제가 완료됐어요. 방문 전 최종 안내만 남았습니다.",
+          "예약금 입금이 확인되어 예약이 확정됐어요. 방문 전 최종 안내만 남았습니다.",
           0,
-          ConsultationBookingStatus.PAYMENT_COMPLETED,
+          ConsultationBookingStatus.CONFIRMED,
           1,
-          new ConsultationBookingSelection(LocalDate.of(2026, 5, 5), "16:00", 30000),
+          new ConsultationBookingSelection(
+              LocalDate.of(2026, 5, 5),
+              "16:00",
+              30000,
+              "신한은행",
+              "100-5521-3000",
+              "호텔 더 스카이"),
           LocalDateTime.of(2026, 4, 28, 9, 20),
           List.of(
               message("m1", ConsultationSenderRole.PARTNER, ConsultationMessageType.TEXT,
@@ -275,12 +293,18 @@ public class DevelopmentDataInitializer {
                   ConsultationMessageType.BOOKING_REQUEST,
                   "예약 확정 요청을 보냈습니다.",
                   LocalDateTime.of(2026, 4, 28, 2, 50),
-                  new ConsultationBookingSelection(LocalDate.of(2026, 5, 5), "16:00", 30000)),
+                  new ConsultationBookingSelection(
+                      LocalDate.of(2026, 5, 5),
+                      "16:00",
+                      30000,
+                      "신한은행",
+                      "100-5521-3000",
+                      "호텔 더 스카이")),
               message("m4", ConsultationSenderRole.CUSTOMER, ConsultationMessageType.TEXT,
-                  "2026-05-05 16:00 예약을 확정했어요. 보증금 결제도 완료했습니다.",
+                  "2026-05-05 16:00 예약금 입금했습니다. 확인 부탁드려요.",
                   LocalDateTime.of(2026, 4, 28, 3, 0)),
               message("m5", ConsultationSenderRole.PARTNER, ConsultationMessageType.TEXT,
-                  "결제 확인됐습니다. 방문 전날 체크인 안내 메시지 드릴게요.",
+                  "예약금 입금 확인되었습니다. 방문 전날 체크인 안내 메시지 드릴게요.",
                   LocalDateTime.of(2026, 4, 28, 3, 10))));
 
       seedConsultation(

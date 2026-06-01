@@ -6,7 +6,8 @@ export type ConsultationBookingStatus =
   | 'idle'
   | 'reviewing-schedules'
   | 'booking-request-sent'
-  | 'payment-completed';
+  | 'transfer-reported'
+  | 'confirmed';
 export type ConsultationMessageType =
   | 'text'
   | 'image'
@@ -117,9 +118,9 @@ export const mockPartnerConsultations: PartnerConsultation[] = [
     matchingId: '2',
     customerName: '박서연',
     customerNote: '손톱 길이 충분, 주말 오전 선호',
-    statusLabel: '결제대기',
+    statusLabel: '입금대기',
     statusTone: 'payment',
-    summary: '예약 요청을 보낸 상태예요. 고객 결제 완료 여부를 확인해보세요.',
+    summary: '예약금 계좌이체 안내를 보낸 상태예요. 고객 입금 알림을 기다려보세요.',
     unreadCount: 1,
     updatedAt: '2026-04-28T12:15:00+09:00',
     bookingFlow: {
@@ -129,6 +130,9 @@ export const mockPartnerConsultations: PartnerConsultation[] = [
         date: '2026-04-27',
         time: '11:00',
         deposit: 3000,
+        bankName: '국민은행',
+        accountNumber: '110-2482-3000',
+        accountHolder: '네일샵 러블리',
       },
     },
     messages: [
@@ -167,13 +171,16 @@ export const mockPartnerConsultations: PartnerConsultation[] = [
           date: '2026-04-27',
           time: '11:00',
           deposit: 3000,
+          bankName: '국민은행',
+          accountNumber: '110-2482-3000',
+          accountHolder: '네일샵 러블리',
         },
       },
       {
         id: 'm5',
         senderRole: 'customer',
         type: 'text',
-        content: '확인했어요. 잠시 후 결제할게요.',
+        content: '계좌 확인했어요. 입금 후 다시 알릴게요.',
         minutesAgo: 74,
       },
     ],
@@ -184,16 +191,19 @@ export const mockPartnerConsultations: PartnerConsultation[] = [
     customerNote: '명동 방문 경험 있음, 체크인 시간 조율 요청',
     statusLabel: '확정',
     statusTone: 'confirmed',
-    summary: '보증금 결제가 완료됐어요. 방문 전 최종 안내만 남았습니다.',
+    summary: '예약금 입금이 확인되어 예약이 확정됐어요. 방문 전 최종 안내만 남았습니다.',
     unreadCount: 0,
     updatedAt: '2026-04-28T09:20:00+09:00',
     bookingFlow: {
-      status: 'payment-completed',
+      status: 'confirmed',
       desiredScheduleCount: 1,
       selectedBooking: {
         date: '2026-05-05',
         time: '16:00',
         deposit: 30000,
+        bankName: '신한은행',
+        accountNumber: '100-5521-3000',
+        accountHolder: '호텔 더 스카이',
       },
     },
     messages: [
@@ -222,20 +232,23 @@ export const mockPartnerConsultations: PartnerConsultation[] = [
           date: '2026-05-05',
           time: '16:00',
           deposit: 30000,
+          bankName: '신한은행',
+          accountNumber: '100-5521-3000',
+          accountHolder: '호텔 더 스카이',
         },
       },
       {
         id: 'm4',
         senderRole: 'customer',
         type: 'text',
-        content: '2026-05-05 16:00 예약을 확정했어요. 보증금 결제도 완료했습니다.',
+        content: '2026-05-05 16:00 예약금 입금했습니다. 확인 부탁드려요.',
         minutesAgo: 380,
       },
       {
         id: 'm5',
         senderRole: 'partner',
         type: 'text',
-        content: '결제 확인됐습니다. 방문 전날 체크인 안내 메시지 드릴게요.',
+        content: '예약금 입금 확인되었습니다. 방문 전날 체크인 안내 메시지 드릴게요.',
         minutesAgo: 370,
       },
     ],

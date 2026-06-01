@@ -129,6 +129,77 @@ class ConsultationServiceTest {
   }
 
   @Test
+  void reportCustomerTransferMarksTransferReportedState() {
+    Consultation consultation = createConsultation(61L, 0);
+    consultation.setSelectedBooking(
+        new ConsultationBookingSelection(
+            LocalDate.of(2026, 6, 3),
+            "16:00",
+            5000,
+            "국민은행",
+            "110-2482-5000",
+            "파트너"));
+    AtomicReference<ConsultationMessage> savedMessage = new AtomicReference<>();
+
+    when(consultationRepository.findByPostIdAndCustomerId(5L, 10L))
+        .thenReturn(Optional.of(consultation));
+    when(consultationMessageRepository.save(any(ConsultationMessage.class)))
+        .thenAnswer(
+            invocation -> {
+              ConsultationMessage message = invocation.getArgument(0);
+              savedMessage.set(message);
+              return message;
+            });
+    when(consultationMessageRepository.findByConsultationIdOrderByCreatedAtAsc(61L))
+        .thenAnswer(invocation -> List.of(savedMessage.get()));
+
+    var response =
+        consultationService.reportCustomerTransfer(
+            5L, new AuthenticatedUser(10L, "customer@example.com", UserRole.CUSTOMER));
+
+    assertThat(response.statusLabel()).isEqualTo("입금확인중");
+    assertThat(response.statusTone()).isEqualTo("payment");
+    assertThat(response.bookingFlow().status()).isEqualTo("transfer-reported");
+    assertThat(response.messages().get(0).content()).contains("예약금 입금했습니다");
+  }
+
+  @Test
+  void confirmPartnerTransferMarksConfirmedState() {
+    Consultation consultation = createConsultation(71L, 0);
+    consultation.setSelectedBooking(
+        new ConsultationBookingSelection(
+            LocalDate.of(2026, 6, 3),
+            "16:00",
+            5000,
+            "국민은행",
+            "110-2482-5000",
+            "파트너"));
+    consultation.setBookingStatus(ConsultationBookingStatus.TRANSFER_REPORTED);
+    AtomicReference<ConsultationMessage> savedMessage = new AtomicReference<>();
+
+    when(consultationRepository.findByPostIdAndPostOwnerId(5L, 1L))
+        .thenReturn(Optional.of(consultation));
+    when(consultationMessageRepository.save(any(ConsultationMessage.class)))
+        .thenAnswer(
+            invocation -> {
+              ConsultationMessage message = invocation.getArgument(0);
+              savedMessage.set(message);
+              return message;
+            });
+    when(consultationMessageRepository.findByConsultationIdOrderByCreatedAtAsc(71L))
+        .thenAnswer(invocation -> List.of(savedMessage.get()));
+
+    var response =
+        consultationService.confirmPartnerTransfer(
+            5L, new AuthenticatedUser(1L, "partner@example.com", UserRole.PARTNER));
+
+    assertThat(response.statusLabel()).isEqualTo("확정");
+    assertThat(response.statusTone()).isEqualTo("confirmed");
+    assertThat(response.bookingFlow().status()).isEqualTo("confirmed");
+    assertThat(response.messages().get(0).content()).contains("예약금 입금 확인되었습니다");
+  }
+
+  @Test
   void sendCustomerImageMessageStoresImageAndMarksUnread() {
     AuthenticatedUser authenticatedUser =
         new AuthenticatedUser(10L, "customer@example.com", UserRole.CUSTOMER);
@@ -199,7 +270,7 @@ class ConsultationServiceTest {
     consultation.setPost(createPost(5L));
     consultation.setCustomer(createCustomer(10L, "김고객"));
     consultation.setCustomerNote("메모");
-    consultation.setStatusLabel("결제대기");
+    consultation.setStatusLabel("입금대기");
     consultation.setStatusTone(ConsultationStatusTone.PAYMENT);
     consultation.setSummary("요약");
     consultation.setUnreadCount(unreadCount);

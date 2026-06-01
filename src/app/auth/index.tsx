@@ -36,7 +36,7 @@ const signupRoleOptions: { role: AuthenticatedRole; title: string; description: 
   {
     role: 'customer',
     title: '고객 계정',
-    description: '지원하기, 고객 채팅, 예약 확정과 결제를 진행할 수 있어요.',
+    description: '지원하기, 고객 채팅, 예약금 입금 알림과 예약 확정을 진행할 수 있어요.',
   },
   {
     role: 'partner',
@@ -70,6 +70,7 @@ export default function AuthScreen() {
   const [signupRole, setSignupRole] = useState<AuthenticatedRole>('customer');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
   const [name, setName] = useState('');
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -112,6 +113,12 @@ export default function AuthScreen() {
 
   const handleSubmit = async () => {
     clearErrors();
+
+    if (mode === 'signup' && password !== passwordConfirm) {
+      setFieldErrors({ passwordConfirm: '비밀번호 확인이 일치하지 않습니다.' });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -259,6 +266,30 @@ export default function AuthScreen() {
                 <Text style={styles.fieldErrorText}>{fieldErrors.password}</Text>
               ) : null}
             </View>
+
+            {mode === 'signup' && (
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>비밀번호 확인</Text>
+                <TextInput
+                  autoCapitalize="none"
+                  autoComplete="new-password"
+                  onChangeText={(value) => {
+                    setPasswordConfirm(value);
+                    if (submitError || fieldErrors.passwordConfirm) {
+                      clearErrors();
+                    }
+                  }}
+                  placeholder="비밀번호를 한 번 더 입력"
+                  placeholderTextColor="#8A8F98"
+                  secureTextEntry
+                  style={[styles.input, fieldErrors.passwordConfirm && styles.inputError]}
+                  value={passwordConfirm}
+                />
+                {fieldErrors.passwordConfirm ? (
+                  <Text style={styles.fieldErrorText}>{fieldErrors.passwordConfirm}</Text>
+                ) : null}
+              </View>
+            )}
 
             {mode === 'signup' && (
               <View style={styles.fieldGroup}>

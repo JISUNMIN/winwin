@@ -19,10 +19,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   closePartnerConsultation,
-  completeCustomerConsultationPayment,
+  confirmPartnerConsultationTransfer,
   getCustomerConsultation,
   getPartnerConsultation as getPartnerConsultationApi,
   mapConsultationResponseToPartnerConsultation,
+  reportCustomerConsultationTransfer,
   sendCustomerConsultationImage,
   sendCustomerDesiredSchedules,
   sendCustomerConsultationTextMessage,
@@ -82,7 +83,8 @@ type BookingFlowStatus =
   | 'idle'
   | 'reviewing-schedules'
   | 'booking-request-sent'
-  | 'payment-completed';
+  | 'transfer-reported'
+  | 'confirmed';
 
 type BookingFlowState = {
   status: BookingFlowStatus;
@@ -137,6 +139,17 @@ function getApiErrorMessage(error: unknown, fallbackMessage: string) {
   }
 
   return fallbackMessage;
+}
+
+function createTransferDetails(shopName: string, matchingId: string | undefined, deposit: number) {
+  const numericId = Number(matchingId ?? '0');
+  const suffix = String(Math.max(1000, (numericId || 1) * 137 + deposit)).slice(-4);
+
+  return {
+    bankName: '국민은행',
+    accountNumber: `110-2482-${suffix}`,
+    accountHolder: shopName,
+  };
 }
 
 function getSeedMessages(
@@ -604,6 +617,7 @@ export function ChatScreen({
       date: selectedOption.date,
       time: selectedOption.time,
       deposit: matching.deposit ?? 5000,
+      ...createTransferDetails(matching.shopName, id, matching.deposit ?? 5000),
     };
 
     if (isApiSession && id) {
@@ -632,7 +646,7 @@ export function ChatScreen({
           id: String(replyTime),
           senderRole: 'partner',
           type: 'text',
-          content: `${selectedOption.time} 일정으로 가능해요. 아래 요청에서 예약을 확정해주세요.`,
+          content: `${selectedOption.time} 일정으로 가능해요. 아래 계좌 안내를 확인하고 예약금을 입금해 주세요.`,
           timestamp: new Date(replyTime),
         },
         {
@@ -700,7 +714,7 @@ export function ChatScreen({
     );
   };
 
-  const handlePaymentComplete = (bookingData: BookingData) => {
+  const handleReportTransfer = (bookingData: BookingData) => {
     if (isSendingMessage) {
       return;
     }
@@ -713,13 +727,13 @@ export function ChatScreen({
     if (isApiSession && id) {
       setIsSendingMessage(true);
 
-      completeCustomerConsultationPayment(accessToken, Number(id))
+      reportCustomerConsultationTransfer(accessToken, Number(id))
         .then((response) => {
           setConsultation(mapConsultationResponseToPartnerConsultation(response));
           setSelectedBooking(null);
         })
         .catch((error) => {
-          Alert.alert('결제 완료 처리 실패', getApiErrorMessage(error, '결제 완료를 반영하지 못했어요.'));
+          Alert.alert('입금 알림 실패', getApiErrorMessage(error, '입금 알림을 반영하지 못했어요.'));
         })
         .finally(() => {
           setIsSendingMessage(false);
@@ -731,7 +745,7 @@ export function ChatScreen({
       id: String(Date.now()),
       senderRole: 'customer',
       type: 'text',
-      content: `${bookingData.date} ${bookingData.time} 예약을 확정했어요. 보증금 결제도 완료했습니다.`,
+      content: `${bookingData.date} ${bookingData.time} 예약금 입금했습니다. 확인 부탁드려요.`,
       timestamp: new Date(),
     };
 
@@ -739,7 +753,47 @@ export function ChatScreen({
     setSelectedBooking(null);
     setBookingFlowState((currentState) => ({
       ...currentState,
-      status: 'payment-completed',
+      status: 'transfer-reported',
+      selectedBooking: bookingData,
+    }));
+  };
+
+  const handleConfirmTransfer = (bookingData: BookingData) => {
+    if (isSendingMessage) {
+      return;
+    }
+
+    if (isApiSession && id) {
+      setIsSendingMessage(true);
+
+      confirmPartnerConsultationTransfer(accessToken, Number(id))
+        .then((response) => {
+          setConsultation(mapConsultationResponseToPartnerConsultation(response));
+        })
+        .catch((error) => {
+          Alert.alert(
+            '입금 확인 실패',
+            getApiErrorMessage(error, '입금 확인 후 예약 확정을 반영하지 못했어요.'),
+          );
+        })
+        .finally(() => {
+          setIsSendingMessage(false);
+        });
+      return;
+    }
+
+    const confirmMessage: Message = {
+      id: String(Date.now()),
+      senderRole: 'partner',
+      type: 'text',
+      content: `${bookingData.date} ${bookingData.time} 예약금 입금 확인되었습니다. 예약이 확정되었어요.`,
+      timestamp: new Date(),
+    };
+
+    setMessages((currentMessages) => [...currentMessages, confirmMessage]);
+    setBookingFlowState((currentState) => ({
+      ...currentState,
+      status: 'confirmed',
       selectedBooking: bookingData,
     }));
   };
@@ -760,18 +814,22 @@ export function ChatScreen({
     .reverse()
     .find((message) => message.type === 'booking-request');
   const bookingStatusLabel =
-    bookingFlowState.status === 'payment-completed'
+    bookingFlowState.status === 'confirmed'
       ? '확정'
+      : bookingFlowState.status === 'transfer-reported'
+        ? '입금확인중'
       : bookingFlowState.status === 'booking-request-sent'
-        ? '결제대기'
+        ? '입금대기'
         : bookingFlowState.status === 'reviewing-schedules'
           ? '검토중'
           : '대기';
   const nextActionText =
-    bookingFlowState.status === 'payment-completed'
-      ? '고객 결제가 완료됐어요. 방문 전 최종 안내 메시지를 보내보세요.'
+    bookingFlowState.status === 'confirmed'
+      ? '예약이 확정됐어요. 방문 전 최종 안내 메시지를 보내보세요.'
+      : bookingFlowState.status === 'transfer-reported'
+        ? '고객이 입금 알림을 보냈어요. 실제 입금을 확인한 뒤 예약을 확정해보세요.'
       : bookingFlowState.status === 'booking-request-sent'
-        ? '고객의 결제 완료 여부를 확인하고 예약 상태를 확정해보세요.'
+        ? '고객에게 예약금 계좌이체를 안내한 상태예요. 입금 알림을 기다려보세요.'
         : bookingFlowState.status === 'reviewing-schedules'
           ? '고객이 보낸 희망 일정 중 가능한 시간을 골라 예약 요청을 보내보세요.'
           : '먼저 고객의 상태와 방문 가능 시간을 상담으로 받아보세요.';
@@ -866,7 +924,7 @@ export function ChatScreen({
             <View style={styles.apiInfoBox}>
               <Ionicons name="information-circle" size={16} color="#1D4ED8" />
               <Text style={styles.apiInfoText}>
-                현재 API 세션입니다. 텍스트, 이미지, 희망 일정, 예약 요청, 결제 완료가 서버에 저장됩니다.
+                현재 API 세션입니다. 텍스트, 이미지, 희망 일정, 예약 요청, 입금 알림, 예약 확정이 서버에 저장됩니다.
               </Text>
             </View>
           ) : null}
@@ -933,8 +991,21 @@ export function ChatScreen({
                   <View style={styles.cardMessage}>
                     <BookingRequestCard
                       bookingData={message.bookingData}
-                      canAccept={isCustomerViewer && canUseCustomerActions && !isSendingMessage}
-                      onAccept={handleAcceptBooking}
+                      canReportTransfer={
+                        isCustomerViewer &&
+                        canUseCustomerActions &&
+                        !isSendingMessage &&
+                        bookingFlowState.status === 'booking-request-sent'
+                      }
+                      canConfirmTransfer={
+                        !isCustomerViewer &&
+                        !isSendingMessage &&
+                        bookingFlowState.status === 'transfer-reported'
+                      }
+                      isTransferReported={bookingFlowState.status === 'transfer-reported'}
+                      isConfirmed={bookingFlowState.status === 'confirmed'}
+                      onReportTransfer={handleAcceptBooking}
+                      onConfirmTransfer={handleConfirmTransfer}
                     />
                     <Text style={[styles.cardTimeText, isMine && styles.userCardTimeText]}>
                       {formatMessageTime(message.timestamp)}
@@ -1035,7 +1106,7 @@ export function ChatScreen({
           bookingData={selectedBooking}
           shopName={matching.shopName}
           onClose={() => setSelectedBooking(null)}
-          onComplete={handlePaymentComplete}
+          onComplete={handleReportTransfer}
         />
       </KeyboardAvoidingView>
     </SafeAreaView>

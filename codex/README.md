@@ -103,6 +103,7 @@ Git에는 올리지 않기 위해 `.gitignore`에 `codex/`를 추가했습니다
 - [Backend 21. 상담 이미지 업로드와 운영 빌드 개발 기능 가리기](./backend-21-consultation-image-upload-and-release-gating.md)
 - [Backend 22. 배포 가드와 실제 README 정리](./backend-22-deployment-guard-and-release-docs.md)
 - [Backend 23. 배포 자동 점검과 health 응답 확장](./backend-23-release-readiness-automation-and-health-check.md)
+- [Backend 24. 회원가입 확인 입력과 예약금 계좌이체 흐름](./backend-24-signup-confirm-and-transfer-based-booking-flow.md)
 - [Android 빌드 플러그인 해석 오류 수정](./android-build-plugin-resolution-fix.md)
 - [배포 준비 체크리스트](./deployment-readiness-checklist.md)
 - [RN 태그 정리 for React 개발자](./rn-tags-for-react-developers.md)

@@ -34,7 +34,7 @@ const filterOptions: { key: FilterKey; label: string }[] = [
 const sortOptions: { key: SortKey; label: string }[] = [
   { key: 'latest', label: '최신 등록순' },
   { key: 'date', label: '가까운 날짜순' },
-  { key: 'deposit', label: '보증금 높은순' },
+  { key: 'deposit', label: '예약금 높은순' },
 ];
 
 function getSortValueDate(value?: string) {
@@ -335,7 +335,7 @@ function ShopPostManageContent() {
           <View style={styles.emptyCard}>
             <Ionicons name="document-text-outline" size={28} color="#8A8F98" />
             <Text style={styles.emptyTitle}>아직 등록한 공고가 없어요</Text>
-            <Text style={styles.emptyText}>첫 공고를 등록하면 여기서 날짜, 위치, 보증금을 한 번에 관리할 수 있어요.</Text>
+            <Text style={styles.emptyText}>첫 공고를 등록하면 여기서 날짜, 위치, 예약금을 한 번에 관리할 수 있어요.</Text>
             <Pressable
               accessibilityRole="button"
               onPress={openCreateScreen}
@@ -387,7 +387,7 @@ function ShopPostManageContent() {
 
                     <View style={styles.bottomRow}>
                       <Text style={styles.bottomText}>
-                        조건 {matching.requirements.length}개 · 보증금 {(matching.deposit ?? 0).toLocaleString()}원
+                        조건 {matching.requirements.length}개 · 예약금 {(matching.deposit ?? 0).toLocaleString()}원
                       </Text>
                     </View>
 
