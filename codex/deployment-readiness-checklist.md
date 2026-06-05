@@ -51,7 +51,9 @@ APP_UPLOAD_DIR=<absolute-or-managed-upload-path>
 7. 이미지 전송
 8. 희망 일정 전송
 9. 예약 요청 수신 확인
-10. 결제 완료 처리
+10. 예약금 계좌 안내 확인
+11. 예약금 입금 알림
+12. 예약 확정 확인
 
 파트너 흐름:
 
@@ -65,7 +67,9 @@ APP_UPLOAD_DIR=<absolute-or-managed-upload-path>
 8. 텍스트 전송
 9. 이미지 전송
 10. 예약 요청 전송
-11. 상담 종료
+11. 고객 예약금 입금 알림 확인
+12. 예약 확정 처리
+13. 상담 종료
 
 공통 확인:
 
@@ -73,18 +77,32 @@ APP_UPLOAD_DIR=<absolute-or-managed-upload-path>
 - 업로드 이미지가 앱 재실행 후에도 보이는지
 - `/uploads/...` URL이 외부 기기에서도 열리는지
 
-## 4. 아직 남아 있는 주의점
+## 4. Android 스토어 업로드 전 추가 확인
 
-- 결제는 아직 실제 PG 연동이 아니라 `결제 완료 처리` API 수준입니다.
+- `eas.json` 기준으로 `preview`와 `production` 빌드 프로필을 구분해서 사용하기
+- Play Store 첫 업로드 전 Android 패키지명 `com.winwin.app` 최종 확인
+- `EXPO_PUBLIC_API_BASE_URL` 운영 주소로 production 빌드 생성
+- 내부 테스트는 `npm.cmd run android:build:preview`
+- Play 업로드용 AAB는 `npm.cmd run android:build:production`
+
+자세한 순서는:
+
+- [codex/android-play-store-release-guide.md](./android-play-store-release-guide.md)
+
+## 5. 아직 남아 있는 주의점
+
+- 예약금은 PG 연동이 아니라 `직접 계좌이체 -> 고객 입금 알림 -> 파트너 확인` 흐름입니다.
+- WinWin은 송금/환불 책임을 직접 지지 않는 안내를 UI에 넣었지만, 운영 정책 문구는 별도 검토가 필요할 수 있습니다.
 - 일부 화면은 서버 실패 시 개발용 예시 데이터를 fallback으로 보여줄 수 있습니다.
 - 운영 배포 전에는 fallback 정책을 더 줄일지 결정하는 편이 좋습니다.
 
-## 5. 배포 직전 추천 확인 명령
+## 6. 배포 직전 추천 확인 명령
 
 ```powershell
 .\node_modules\.bin\tsc.cmd --noEmit
 backend\.\mvnw.cmd test
 android\gradlew.bat help
+npm.cmd run android:release:check
 npm.cmd run release:check
 ```
 

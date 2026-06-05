@@ -120,6 +120,33 @@ cd android
 .\gradlew.bat help
 ```
 
+## Android Play Store
+
+This repo now includes an `eas.json` for Expo Application Services.
+
+Useful commands:
+
+```powershell
+npm.cmd run android:release:check
+npm.cmd run android:build:preview
+npm.cmd run android:build:production
+npm.cmd run android:submit:production
+```
+
+Recommended flow:
+
+1. `npx eas-cli login`
+2. `npx eas-cli project:init`
+3. Set `EXPO_PUBLIC_API_BASE_URL` to the real API host
+4. If needed, update `android/gradle.properties`
+5. Run `npm.cmd run android:release:check`
+6. Run `npm.cmd run android:build:production`
+7. Upload the generated `.aab` to Play Console
+
+See:
+
+- [codex/android-play-store-release-guide.md](./codex/android-play-store-release-guide.md)
+
 ## Deployment Checklist
 
 See:
