@@ -1,53 +1,52 @@
 # Session End Summary
 
 ## Date
-- 2026-05-07
+- 2026-06-05
 
 ## Workspace
 - C:\Users\zentropy\Music\WinWin\WinWin
 
 ## Done
-- Installed and verified the local Java backend toolchain: Java 17, Maven, PostgreSQL 16, and the `winwin` database.
-- Created the `backend/` Spring Boot project with Maven Wrapper, PostgreSQL config, and initial `/api/health` endpoint.
-- Implemented first-pass auth API: `POST /api/auth/signup`, `POST /api/auth/login`, and `GET /api/users/me`.
-- Added JWT-based auth flow with `SecurityConfig`, `JwtAuthenticationFilter`, `JwtTokenProvider`, `UserAccount`, and `UserRepository`.
-- Verified the backend with `.\mvnw.cmd test`, health check, and a full signup -> login -> users/me API flow.
-- Expanded backend learning docs for a beginner: merged the backend folder guide into [codex/backend-01-spring-project-init.md](/abs/path/C:/Users/zentropy/Music/WinWin/WinWin/codex/backend-01-spring-project-init.md) and deepened [codex/backend-02-auth-api-first-pass.md](/abs/path/C:/Users/zentropy/Music/WinWin/WinWin/codex/backend-02-auth-api-first-pass.md) with file roles, request flow, naming rules, annotations, and Spring Data JPA repository method notes.
-- Updated [codex/README.md](/abs/path/C:/Users/zentropy/Music/WinWin/WinWin/codex/README.md) to reflect the current backend document structure.
+- Added low-cost production deployment path using `Render + Neon + Supabase Storage`.
+- Refactored consultation image storage to support `local` and `supabase` modes with `APP_STORAGE_MODE`.
+- Added `SupabaseConsultationImageStorage`, kept local upload support behind conditional config, and updated production guard + health readiness for Supabase mode.
+- Added root `Dockerfile` and `.dockerignore` so the Spring Boot backend can deploy on Render via Docker.
+- Deployed backend successfully to `https://winwin-api.onrender.com` and confirmed `GET /api/health` returns production status with Supabase-backed upload URL.
+- Built Android production `.aab` successfully via EAS. Output artifact: `https://expo.dev/artifacts/eas/7hojmgEjn9kjw6Hbj77GUs.aab`
+- Updated deployment docs and added a concept note explaining Render, Neon, Supabase, Dockerfile, deployment flow, and why each service is used.
+- Fixed `eas.json` production profile error by changing `autoIncrement` to a boolean.
 
 ## Files
-- backend/pom.xml
-- backend/mvnw
-- backend/mvnw.cmd
-- backend/.mvn/wrapper/maven-wrapper.properties
+- Dockerfile
+- .dockerignore
+- backend/src/main/java/com/winwin/backend/consultation/ConsultationImageStorage.java
+- backend/src/main/java/com/winwin/backend/consultation/LocalConsultationImageStorage.java
+- backend/src/main/java/com/winwin/backend/consultation/SupabaseConsultationImageStorage.java
+- backend/src/main/java/com/winwin/backend/consultation/ConsultationService.java
+- backend/src/main/java/com/winwin/backend/config/UploadResourceConfig.java
+- backend/src/main/java/com/winwin/backend/config/DeploymentGuard.java
+- backend/src/main/java/com/winwin/backend/api/HealthStatusService.java
 - backend/src/main/resources/application.yml
-- backend/src/main/java/com/winwin/backend/api/HealthController.java
-- backend/src/main/java/com/winwin/backend/auth/AuthController.java
-- backend/src/main/java/com/winwin/backend/auth/AuthService.java
-- backend/src/main/java/com/winwin/backend/auth/dto/AuthTokenResponse.java
-- backend/src/main/java/com/winwin/backend/auth/dto/LoginRequest.java
-- backend/src/main/java/com/winwin/backend/auth/dto/MeResponse.java
-- backend/src/main/java/com/winwin/backend/auth/dto/SignupRequest.java
-- backend/src/main/java/com/winwin/backend/config/SecurityConfig.java
-- backend/src/main/java/com/winwin/backend/security/AuthenticatedUser.java
-- backend/src/main/java/com/winwin/backend/security/JwtAuthenticationFilter.java
-- backend/src/main/java/com/winwin/backend/security/JwtTokenProvider.java
-- backend/src/main/java/com/winwin/backend/user/UserAccount.java
-- backend/src/main/java/com/winwin/backend/user/UserController.java
-- backend/src/main/java/com/winwin/backend/user/UserRepository.java
-- backend/src/main/java/com/winwin/backend/user/UserRole.java
-- codex/README.md
-- codex/backend-01-spring-project-init.md
-- codex/backend-02-auth-api-first-pass.md
+- backend/src/test/java/com/winwin/backend/consultation/ConsultationServiceTest.java
+- .env.example
+- README.md
+- app.json
+- eas.json
+- codex/backend-30-supabase-storage-for-low-cost-deploy.md
+- codex/backend-31-render-docker-deploy-path.md
+- codex/backend-32-render-neon-supabase-deployment-explained.md
+- codex/render-neon-supabase-deployment-guide.md
 - codex/progress-and-next-steps.md
-- codex/SESSION_END_SUMMARY.md
+- codex/README.md
 
 ## Verification
-- Ran `.\mvnw.cmd test` in `backend/` successfully.
-- Verified `GET /api/health` returned `200 OK`.
-- Verified `POST /api/auth/signup`, `POST /api/auth/login`, and `GET /api/users/me` with a real local PostgreSQL-backed flow.
+- Ran `.\node_modules\.bin\tsc.cmd --noEmit`
+- Ran `backend\.\mvnw.cmd test`
+- Verified `https://winwin-api.onrender.com/api/health`
+- Completed EAS Android production build and received `.aab` artifact
 
 ## Next Steps
-- Decide whether the next step should be RN mock auth -> real auth API integration or `post` domain API implementation.
-- If continuing backend first, add post entities and APIs: list, detail, partner create, edit, and status update.
-- If continuing frontend integration first, add RN client functions for login/signup/me and replace the current mock auth flow.
+- Commit the remaining local doc/config changes still shown in `git status`: `app.json`, `eas.json`, `codex/README.md`, `codex/backend-31-render-docker-deploy-path.md`, `codex/progress-and-next-steps.md`, `codex/backend-32-render-neon-supabase-deployment-explained.md`.
+- In Play Console, create the app and upload the generated `.aab`.
+- If this is a new personal Play developer account, run `closed testing` with at least 12 opted-in testers for 14 days before requesting production access.
+- Run manual QA on the deployed backend and production app flow: signup/login, chat, image upload, desired schedules, booking request, transfer report, confirmation, close.

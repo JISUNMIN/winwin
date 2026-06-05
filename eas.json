@@ -23,7 +23,7 @@
       }
     },
     "production": {
-      "autoIncrement": "versionCode",
+      "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_ENABLE_DEV_ROLE_SWITCH": "false",
         "EXPO_PUBLIC_ENABLE_DEV_FALLBACK_DATA": "false"

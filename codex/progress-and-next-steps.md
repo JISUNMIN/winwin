@@ -29,6 +29,7 @@
 ## 최근에 추가한 것
 
 - 상담 이미지 업로드 API와 로컬 저장소 연결
+- Render + Neon + Supabase 조합을 기준으로 한 배포 개념 문서 추가
 - `/api/health` 응답에 `service`, `environment`, `uploadDirectoryReady`, `uploadDirectory` 추가
 - 배포 전 자동 점검 스크립트 `scripts/check-release-readiness.ps1` 추가
 - 루트 명령 `npm run release:check` 추가
