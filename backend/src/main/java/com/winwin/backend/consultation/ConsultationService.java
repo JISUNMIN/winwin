@@ -355,7 +355,7 @@ public class ConsultationService {
     message.setSenderRole(senderRole);
     message.setType(ConsultationMessageType.IMAGE);
     message.setContent(content != null && !content.trim().isEmpty() ? content.trim() : "첨부 이미지");
-    message.setImageUrl("/uploads" + consultationImageStorage.store(file));
+    message.setImageUrl(consultationImageStorage.store(file));
     message.setCreatedAt(LocalDateTime.now());
     consultationMessageRepository.save(message);
 

@@ -1,0 +1,12 @@
+node_modules
+.expo
+.git
+.local
+android
+ios
+dist
+web-build
+uploads
+backend/uploads
+backend/target
+*.log

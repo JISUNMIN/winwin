@@ -63,6 +63,7 @@ JWT_SECRET=replace-with-a-long-random-secret
 SERVER_PORT=8080
 APP_ENV=development
 APP_UPLOAD_DIR=uploads
+APP_STORAGE_MODE=local
 ```
 
 Production recommendations:
@@ -70,6 +71,16 @@ Production recommendations:
 ```text
 APP_ENV=production
 APP_UPLOAD_DIR=/managed/persistent/path
+```
+
+Supabase Storage mode:
+
+```text
+APP_ENV=production
+APP_STORAGE_MODE=supabase
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+SUPABASE_STORAGE_BUCKET=consultation-images
 ```
 
 Health endpoint response now includes:
@@ -152,6 +163,16 @@ See:
 See:
 
 - [codex/deployment-readiness-checklist.md](./codex/deployment-readiness-checklist.md)
+- [codex/render-neon-supabase-deployment-guide.md](./codex/render-neon-supabase-deployment-guide.md)
+
+## Render Backend Deploy
+
+Render currently requires Docker for JVM services such as Spring Boot.
+
+This repo now includes:
+
+- [Dockerfile](./Dockerfile)
+- [.dockerignore](./.dockerignore)
 
 ## Project Notes
 

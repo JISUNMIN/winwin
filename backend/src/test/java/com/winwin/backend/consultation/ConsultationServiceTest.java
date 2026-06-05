@@ -210,7 +210,7 @@ class ConsultationServiceTest {
     when(consultationRepository.findByPostIdAndCustomerId(5L, 10L)).thenReturn(Optional.empty());
     when(matchingPostRepository.findWithDetailsById(5L)).thenReturn(Optional.of(post));
     when(userRepository.findById(10L)).thenReturn(Optional.of(customer));
-    when(consultationImageStorage.store(any())).thenReturn("/consultations/2026/05/test.jpg");
+    when(consultationImageStorage.store(any())).thenReturn("/uploads/consultations/2026/05/test.jpg");
     when(consultationRepository.save(any(Consultation.class)))
         .thenAnswer(
             invocation -> {

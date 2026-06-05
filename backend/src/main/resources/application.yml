@@ -30,4 +30,10 @@ server:
 
 app:
   environment: ${APP_ENV:development}
+  storage:
+    mode: ${APP_STORAGE_MODE:local}
+    supabase:
+      url: ${SUPABASE_URL:}
+      service-role-key: ${SUPABASE_SERVICE_ROLE_KEY:}
+      bucket: ${SUPABASE_STORAGE_BUCKET:consultation-images}
   upload-dir: ${APP_UPLOAD_DIR:uploads}
