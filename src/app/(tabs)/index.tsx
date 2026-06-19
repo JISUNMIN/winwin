@@ -1,4 +1,3 @@
-import { useIsFocused } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useRouter } from 'expo-router';
@@ -17,7 +16,6 @@ import { formatFullLocationText } from '@/utils/location-text';
 export default function HomeScreen() {
   const router = useRouter();
   const { role, isLoggedIn, authSource, user, openAuth, signInAs, signOut } = useAuth();
-  const isFocused = useIsFocused();
   const [searchInput, setSearchInput] = useState('');
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<Category>('all');
@@ -112,7 +110,7 @@ export default function HomeScreen() {
     return () => {
       isMounted = false;
     };
-  }, [isFocused]);
+  }, []);
 
   const handleApplySearch = () => {
     setQuery(searchInput.trim());
