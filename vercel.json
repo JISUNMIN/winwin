@@ -1,0 +1,30 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "EXPO_PUBLIC_API_BASE_URL=/api-proxy EXPO_PUBLIC_ENABLE_DEV_ROLE_SWITCH=false EXPO_PUBLIC_ENABLE_DEV_FALLBACK_DATA=false npx expo export -p web",
+  "outputDirectory": "dist",
+  "devCommand": "expo",
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/api-proxy/:match*",
+      "destination": "https://winwin-api.onrender.com/:match*"
+    },
+    {
+      "source": "/matching/:id",
+      "destination": "/"
+    },
+    {
+      "source": "/chat/:id",
+      "destination": "/"
+    },
+    {
+      "source": "/partner/chat/:id",
+      "destination": "/"
+    },
+    {
+      "source": "/partner/post/:id/edit",
+      "destination": "/"
+    }
+  ],
+  "framework": null
+}

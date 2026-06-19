@@ -87,7 +87,7 @@ export default function AuthScreen() {
     : 'WinWin 인증';
   const subtitle = requiredRole
     ? `${roleLabels[requiredRole]} 계정으로 로그인하면 요청한 화면으로 바로 이동합니다.`
-    : '이제 실제 auth API를 호출해 로그인과 회원가입을 연결할 수 있어요.';
+    : '로그인하거나 새 계정을 만들어 서비스를 이어서 이용할 수 있어요.';
 
   const clearErrors = () => {
     setSubmitError(null);
@@ -190,7 +190,7 @@ export default function AuthScreen() {
             </Text>
             <Text style={styles.currentDescription}>
               {isLoggedIn
-                ? `${authSource === 'api' ? '실제 API 세션' : '개발용 mock 세션'}${
+                ? `${authSource === 'api' ? '로그인 상태로 이용 중' : '체험용 세션으로 이용 중'}${
                     user?.email ? ` · ${user.email}` : ''
                   }`
                 : '게스트는 홈과 상세는 볼 수 있지만, 고객 액션과 파트너 화면은 제한됩니다.'}
@@ -221,8 +221,8 @@ export default function AuthScreen() {
             </Text>
             <Text style={styles.formDescription}>
               {mode === 'login'
-                ? '이메일과 비밀번호로 실제 auth API를 호출합니다.'
-                : '회원가입 성공 시 access token을 저장하고 바로 로그인 상태로 전환합니다.'}
+                ? '이메일과 비밀번호를 입력해 로그인할 수 있어요.'
+                : '회원가입을 완료하면 바로 로그인 상태로 전환됩니다.'}
             </Text>
 
             <View style={styles.fieldGroup}>
@@ -279,7 +279,7 @@ export default function AuthScreen() {
                       clearErrors();
                     }
                   }}
-                  placeholder="비밀번호를 한 번 더 입력"
+                  placeholder="비밀번호를 다시 입력해 주세요"
                   placeholderTextColor="#8A8F98"
                   secureTextEntry
                   style={[styles.input, fieldErrors.passwordConfirm && styles.inputError]}
@@ -358,7 +358,7 @@ export default function AuthScreen() {
             <View style={styles.helperCard}>
               <Text style={styles.helperTitle}>개발용 빠른 전환</Text>
               <Text style={styles.helperDescription}>
-                실제 인증과 별개로 화면 흐름 점검이 필요할 때만 아래 개발용 전환을 사용하세요.
+                화면 흐름 점검이 필요할 때만 아래 체험용 전환을 사용하세요.
               </Text>
 
               <View style={styles.quickActionList}>

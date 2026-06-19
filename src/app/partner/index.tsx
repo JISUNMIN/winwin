@@ -125,7 +125,7 @@ function PartnerHomeContent() {
           if (isMounted) {
             setLoadError(
               ENABLE_DEV_FALLBACK_DATA
-                ? '서버 공고를 불러오지 못해 상담 카드 일부에 개발용 예시 정보를 함께 보여주고 있어요.'
+                ? '서버 공고를 불러오지 못해 상담 카드 일부에 예시 정보를 함께 보여주고 있어요.'
                 : '서버 공고를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
             );
           }
@@ -169,7 +169,7 @@ function PartnerHomeContent() {
           if (isMounted) {
             setLoadError(
               ENABLE_DEV_FALLBACK_DATA
-                ? '상담 목록 API를 불러오지 못해 일부 상담은 개발용 예시 데이터로 보여주고 있어요.'
+                ? '상담 목록을 불러오지 못해 일부 상담은 예시 데이터로 보여주고 있어요.'
                 : '상담 목록 API를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
             );
           }

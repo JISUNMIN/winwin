@@ -22,6 +22,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,6 +31,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class DevelopmentDataInitializer {
 
   @Bean
+  @ConditionalOnProperty(name = "app.environment", havingValue = "development", matchIfMissing = true)
   CommandLineRunner seedDevelopmentData(
       UserRepository userRepository,
       MatchingPostRepository matchingPostRepository,

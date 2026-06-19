@@ -12,12 +12,24 @@
         "EXPO_PUBLIC_ENABLE_DEV_FALLBACK_DATA": "true"
       }
     },
+    "portfolio": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://winwin-api.onrender.com",
+        "EXPO_PUBLIC_ENABLE_DEV_ROLE_SWITCH": "false",
+        "EXPO_PUBLIC_ENABLE_DEV_FALLBACK_DATA": "false"
+      }
+    },
     "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk"
       },
       "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://winwin-api.onrender.com",
         "EXPO_PUBLIC_ENABLE_DEV_ROLE_SWITCH": "false",
         "EXPO_PUBLIC_ENABLE_DEV_FALLBACK_DATA": "false"
       }
@@ -25,6 +37,7 @@
     "production": {
       "autoIncrement": true,
       "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://winwin-api.onrender.com",
         "EXPO_PUBLIC_ENABLE_DEV_ROLE_SWITCH": "false",
         "EXPO_PUBLIC_ENABLE_DEV_FALLBACK_DATA": "false"
       }

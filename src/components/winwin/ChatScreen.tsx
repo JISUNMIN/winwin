@@ -710,7 +710,7 @@ export function ChatScreen({
 
     Alert.alert(
       '상담 종료',
-      '개발용 로컬 상담 화면이라 종료 상태 저장은 아직 서버와 연결되지 않았어요.',
+      '체험용 상담 화면에서는 종료 상태가 별도로 저장되지 않아요.',
     );
   };
 
@@ -924,7 +924,7 @@ export function ChatScreen({
             <View style={styles.apiInfoBox}>
               <Ionicons name="information-circle" size={16} color="#1D4ED8" />
               <Text style={styles.apiInfoText}>
-                현재 API 세션입니다. 텍스트, 이미지, 희망 일정, 예약 요청, 입금 알림, 예약 확정이 서버에 저장됩니다.
+                현재 계정의 상담 내용은 서버에 저장되며, 일정 조율과 예약 진행 내역도 함께 반영됩니다.
               </Text>
             </View>
           ) : null}

@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: winwin-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: SERVER_PORT
+        value: "10000"
+      - key: APP_STORAGE_MODE
+        value: supabase
+      - key: SUPABASE_STORAGE_BUCKET
+        value: consultation-images
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false

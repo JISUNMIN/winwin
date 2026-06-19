@@ -1,7 +1,7 @@
 import { useIsFocused } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -100,7 +100,7 @@ export default function HomeScreen() {
           }
           setMatchingLoadError(
             ENABLE_DEV_FALLBACK_DATA
-              ? '서버 공고를 불러오지 못해 임시 mock 목록을 보여주고 있어요.'
+              ? '서버 공고를 불러오지 못해 예시 목록을 보여주고 있어요.'
               : '서버 공고를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
           );
         }
@@ -162,7 +162,7 @@ export default function HomeScreen() {
           setShowDevRoleActions(false);
         }}>
         <View style={styles.accountBar}>
-          <View>
+          <View style={styles.accountInfo}>
             <Text style={styles.accountLabel}>현재 역할</Text>
             <Text style={styles.accountValue}>
               {isLoggedIn ? `${roleLabels[role]} 로그인` : '게스트'}
@@ -170,8 +170,8 @@ export default function HomeScreen() {
             <Text style={styles.accountDescription}>
               {isLoggedIn
                 ? authSource === 'api'
-                  ? user?.email ?? '실제 API 계정으로 로그인 중'
-                  : '개발용 mock 세션으로 진입 중'
+                  ? user?.email ?? '로그인 상태로 이용 중'
+                  : '체험용 세션으로 이용 중'
                 : '로그인하면 요청한 역할 화면으로 바로 이동할 수 있어요.'}
             </Text>
           </View>
@@ -276,25 +276,27 @@ export default function HomeScreen() {
 
                 {showPartnerMenu && (
                   <View style={styles.partnerMenuDropdown}>
-                    <Pressable
-                      accessibilityRole="button"
-                      onPress={() => {
-                        setShowPartnerMenu(false);
-                        router.push('/partner');
-                      }}
-                      style={styles.partnerMenuItem}>
-                      <Text style={styles.partnerMenuItemText}>상담 목록</Text>
-                    </Pressable>
+                    <Link href="/partner" asChild>
+                      <Pressable
+                        accessibilityRole="button"
+                        onPress={() => {
+                          setShowPartnerMenu(false);
+                        }}
+                        style={styles.partnerMenuItem}>
+                        <Text style={styles.partnerMenuItemText}>상담 목록</Text>
+                      </Pressable>
+                    </Link>
 
-                    <Pressable
-                      accessibilityRole="button"
-                      onPress={() => {
-                        setShowPartnerMenu(false);
-                        router.push('/partner/post');
-                      }}
-                      style={styles.partnerMenuItem}>
-                      <Text style={styles.partnerMenuItemText}>공고 관리</Text>
-                    </Pressable>
+                    <Link href="/partner/post" asChild>
+                      <Pressable
+                        accessibilityRole="button"
+                        onPress={() => {
+                          setShowPartnerMenu(false);
+                        }}
+                        style={styles.partnerMenuItem}>
+                        <Text style={styles.partnerMenuItemText}>공고 관리</Text>
+                      </Pressable>
+                    </Link>
                   </View>
                 )}
               </View>
@@ -319,7 +321,7 @@ export default function HomeScreen() {
           <View style={styles.devNoticeBox}>
             <Text style={styles.devNoticeTitle}>개발용 빠른 전환</Text>
             <Text style={styles.devNoticeText}>
-              실제 auth API와 별개로 고객/파트너 흐름을 빠르게 확인할 때만 사용하세요.
+              고객과 파트너 흐름을 빠르게 점검할 때만 사용하세요.
             </Text>
           </View>
         ) : null}
@@ -452,6 +454,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 12,
   },
+  accountInfo: {
+    flex: 1,
+    minWidth: 0,
+    paddingRight: 8,
+  },
   accountLabel: {
     color: '#6D5DFB',
     fontSize: 12,
@@ -471,9 +478,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   accountActions: {
+    flexShrink: 0,
     alignItems: 'flex-end',
     gap: 8,
     position: 'relative',
+    zIndex: 1,
   },
   accountButton: {
     minHeight: 36,

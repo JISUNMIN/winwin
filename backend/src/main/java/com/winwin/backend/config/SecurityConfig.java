@@ -2,6 +2,7 @@ package com.winwin.backend.config;
 
 import com.winwin.backend.security.JwtAuthenticationFilter;
 import com.winwin.backend.security.RestAuthenticationEntryPoint;
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -54,12 +55,15 @@ public class SecurityConfig {
   @Bean
   CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOriginPatterns(
-        List.of(
-            "http://localhost:*",
-            "http://127.0.0.1:*",
-            "http://192.168.*:*",
-            "http://10.0.2.2:*"));
+    List<String> allowedOriginPatterns = new ArrayList<>();
+    allowedOriginPatterns.add("http://localhost:*");
+    allowedOriginPatterns.add("http://127.0.0.1:*");
+    allowedOriginPatterns.add("http://192.168.*:*");
+    allowedOriginPatterns.add("http://10.0.2.2:*");
+    allowedOriginPatterns.add("https://*.vercel.app");
+    allowedOriginPatterns.add("https://winwin-azure.vercel.app");
+
+    configuration.setAllowedOriginPatterns(allowedOriginPatterns);
     configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
     configuration.setAllowedHeaders(List.of("*"));
     configuration.setAllowCredentials(true);

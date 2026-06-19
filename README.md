@@ -138,11 +138,32 @@ This repo now includes an `eas.json` for Expo Application Services.
 Useful commands:
 
 ```powershell
+npm.cmd run android:build:portfolio
 npm.cmd run android:release:check
 npm.cmd run android:build:preview
 npm.cmd run android:build:production
 npm.cmd run android:submit:production
 ```
+
+### Portfolio Deploy
+
+For a portfolio-friendly delivery flow, this repo now includes:
+
+- `vercel.json` for web deployment on Vercel
+- a `portfolio` EAS profile that builds an installable Android APK with fallback data enabled and dev role switching hidden
+
+Useful commands:
+
+```powershell
+npm.cmd run web:export:portfolio
+npm.cmd run android:build:portfolio
+```
+
+Notes:
+
+- The portfolio web build uses `EXPO_PUBLIC_API_BASE_URL=/` so broken API calls fail on the same origin and the UI can fall back to mock/example data where supported.
+- The portfolio Android APK uses `https://portfolio-api.invalid` as a non-production placeholder API host, keeps fallback data enabled for demos, and hides the development-only role switch UI.
+- Vercel can deploy this app directly from the repo root in `vercel.json`.
 
 Recommended flow:
 

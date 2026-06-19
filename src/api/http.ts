@@ -38,6 +38,10 @@ function normalizeBaseUrl(url: string) {
   return url.endsWith('/') ? url.slice(0, -1) : url;
 }
 
+function createNetworkError() {
+  return new Error('서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.');
+}
+
 export function getApiBaseUrl() {
   const configuredBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
 
@@ -108,10 +112,16 @@ export async function requestJson<T>(path: string, init?: RequestInit): Promise<
     headers.set('Content-Type', 'application/json');
   }
 
-  const response = await fetch(buildUrl(path), {
-    ...init,
-    headers,
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(buildUrl(path), {
+      ...init,
+      headers,
+    });
+  } catch {
+    throw createNetworkError();
+  }
 
   if (!response.ok) {
     const error = new ApiError(await parseErrorResponse(response));
@@ -142,11 +152,17 @@ export async function requestMultipart<T>(
   const headers = new Headers(init?.headers);
   headers.set('Accept', 'application/json');
 
-  const response = await fetch(resolveApiUrl(path), {
-    ...init,
-    body: formData,
-    headers,
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(resolveApiUrl(path), {
+      ...init,
+      body: formData,
+      headers,
+    });
+  } catch {
+    throw createNetworkError();
+  }
 
   if (!response.ok) {
     const error = new ApiError(await parseErrorResponse(response));

@@ -91,7 +91,7 @@ function ShopPostManageContent() {
           if (isMounted) {
             setLoadError(
               ENABLE_DEV_FALLBACK_DATA
-                ? '서버 공고 목록을 불러오지 못해 임시 mock 목록을 보여주고 있어요.'
+                ? '서버 공고 목록을 불러오지 못해 예시 목록을 보여주고 있어요.'
                 : '서버 공고 목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
             );
           }
