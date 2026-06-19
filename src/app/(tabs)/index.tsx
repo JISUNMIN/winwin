@@ -75,10 +75,6 @@ export default function HomeScreen() {
   }, []);
 
   useEffect(() => {
-    if (!isFocused) {
-      return;
-    }
-
     let isMounted = true;
 
     const loadMatchings = async () => {

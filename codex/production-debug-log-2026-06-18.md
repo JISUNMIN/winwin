@@ -64,6 +64,7 @@
 - Updated `src/app/(tabs)/index.tsx`
   - fixed `filteredMatchings` memo dependencies so the home list actually refreshes when API-loaded `matchings` change
   - this resolved the deployed web case where `/api/posts` returned data but the UI still showed `0개`
+  - removed the early `!isFocused` guard for the initial home fetch so web can load posts on first render instead of waiting on a navigation focus state
 
 ### Production data cleanup
 
