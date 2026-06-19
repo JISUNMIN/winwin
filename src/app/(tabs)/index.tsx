@@ -148,7 +148,7 @@ export default function HomeScreen() {
 
       return searchableText.includes(keyword);
     });
-  }, [query, selectedCategory]);
+  }, [matchings, query, selectedCategory]);
 
   const premiumCount = matchings.filter((matching) => matching.premium).length;
 

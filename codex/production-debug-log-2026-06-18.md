@@ -59,6 +59,12 @@
   - users now get a localized retry message:
     - `서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.`
 
+### Home screen data binding fix
+
+- Updated `src/app/(tabs)/index.tsx`
+  - fixed `filteredMatchings` memo dependencies so the home list actually refreshes when API-loaded `matchings` change
+  - this resolved the deployed web case where `/api/posts` returned data but the UI still showed `0개`
+
 ### Production data cleanup
 
 - Updated `backend/src/main/java/com/winwin/backend/config/DevelopmentDataInitializer.java`
@@ -174,10 +180,16 @@
    - command: `cmd /c .\\mvnw.cmd test`
    - result: passed
 
+14. Frontend regression checks after home list fix
+   - command: `cmd /c npx.cmd tsc --noEmit`
+   - result: passed
+   - command: `cmd /c npm.cmd run web:export:portfolio`
+   - result: passed
+
 ## Next Verification Targets
 
 1. Rebuild Android APK if the latest web/API error-handling changes should also be reflected in the installable mobile build
 2. Redeploy Render backend so the production-only seed guard in `DevelopmentDataInitializer.java` is actually applied live
-3. Push the backend query hardening changes and verify the fresh Render deployment stops timing out on `GET /api/posts`
+3. Verify the fresh Vercel deployment renders real posts on the home screen after the `filteredMatchings` dependency fix
 4. If Render backend will be called directly from other web domains later, deploy the backend CORS change from `SecurityConfig.java`
 5. Decide whether previously inserted sample seed rows in production Neon should be cleaned up one time
