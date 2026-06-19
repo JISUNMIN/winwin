@@ -21,6 +21,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 @Entity
 @Table(name = "matching_posts")
@@ -72,6 +75,8 @@ public class MatchingPost {
       joinColumns = @JoinColumn(name = "post_id"))
   @Column(name = "requirement", nullable = false, length = 120)
   @OrderColumn(name = "display_order")
+  @Fetch(FetchMode.SUBSELECT)
+  @BatchSize(size = 50)
   private List<String> requirements = new ArrayList<>();
 
   @ElementCollection
@@ -80,6 +85,8 @@ public class MatchingPost {
       joinColumns = @JoinColumn(name = "post_id"))
   @Column(name = "available_date", nullable = false)
   @OrderColumn(name = "display_order")
+  @Fetch(FetchMode.SUBSELECT)
+  @BatchSize(size = 50)
   private List<LocalDate> availableDates = new ArrayList<>();
 
   @Column(nullable = false)

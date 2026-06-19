@@ -270,7 +270,7 @@ public class ConsultationService {
   private Consultation createConsultationForCustomer(Long postId, AuthenticatedUser authenticatedUser) {
     MatchingPost post =
         matchingPostRepository
-            .findWithDetailsById(postId)
+            .findById(postId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
 
     if (post.getStatus() != PostStatus.OPEN) {

@@ -65,6 +65,21 @@
   - development seed now only runs when `app.environment=development`
   - this change is code-complete locally, but needs a fresh Render backend deploy to take effect in production
 
+### Posts API timeout hardening
+
+- Updated `backend/src/main/java/com/winwin/backend/post/MatchingPostRepository.java`
+  - removed the list/detail `EntityGraph` that was joining owner plus both element collections in one query path
+- Updated `backend/src/main/java/com/winwin/backend/post/PostService.java`
+  - switched post loading to explicit initialization inside the transaction before mapping the response
+- Updated `backend/src/main/java/com/winwin/backend/post/MatchingPost.java`
+  - changed the two `@ElementCollection` fields to Hibernate `SUBSELECT` fetch mode
+- Updated `backend/src/main/resources/application.yml`
+  - added `hibernate.default_batch_fetch_size: 50` for safer lazy loading in list/detail flows
+- Updated `backend/src/main/java/com/winwin/backend/consultation/ConsultationService.java`
+  - aligned consultation post lookup with the repository change
+- Added `backend/src/test/java/com/winwin/backend/post/PostServiceTest.java`
+  - verifies discoverable post mapping and closed-post rejection
+
 ### Web interaction fix
 
 - Updated `src/components/app-tabs.web.tsx`
@@ -142,10 +157,27 @@
      - home screen no longer shows bundled mock cards when API data is unavailable
      - current production behavior is `real API only`, which means an API timeout now shows an empty list instead of fake cards
 
+12. Local production-like `/api/posts` smoke test against Neon
+   - backend started locally with:
+     - `APP_ENV=production`
+     - Neon DB credentials
+     - Supabase storage config
+   - result:
+     - `/api/posts` responded successfully
+     - SQL log confirmed the fetch plan changed from one large multi-join query to:
+       - base `matching_posts` query
+       - owner lookup
+       - `requirements` subselect fetch
+       - `availableDates` subselect fetch
+
+13. Backend regression tests after timeout hardening
+   - command: `cmd /c .\\mvnw.cmd test`
+   - result: passed
+
 ## Next Verification Targets
 
 1. Rebuild Android APK if the latest web/API error-handling changes should also be reflected in the installable mobile build
 2. Redeploy Render backend so the production-only seed guard in `DevelopmentDataInitializer.java` is actually applied live
-3. Investigate the current `GET /api/posts` production timeout on Render
+3. Push the backend query hardening changes and verify the fresh Render deployment stops timing out on `GET /api/posts`
 4. If Render backend will be called directly from other web domains later, deploy the backend CORS change from `SecurityConfig.java`
-5. Add a broader route smoke test for any newly added dynamic web paths
+5. Decide whether previously inserted sample seed rows in production Neon should be cleaned up one time

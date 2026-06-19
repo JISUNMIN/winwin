@@ -8,6 +8,7 @@ import com.winwin.backend.user.UserRepository;
 import com.winwin.backend.user.UserRole;
 import java.util.Comparator;
 import java.util.List;
+import org.hibernate.Hibernate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +41,7 @@ public class PostService {
   public List<PostResponse> getPartnerPosts(AuthenticatedUser authenticatedUser) {
     requirePartnerRole(authenticatedUser);
     return matchingPostRepository.findByOwnerIdOrderByCreatedAtDesc(authenticatedUser.userId()).stream()
+        .map(this::initializePost)
         .map(this::toResponse)
         .toList();
   }
@@ -53,6 +55,7 @@ public class PostService {
   @Transactional(readOnly = true)
   public List<PostResponse> getDiscoverablePosts() {
     return matchingPostRepository.findByStatusOrderByCreatedAtDesc(PostStatus.OPEN).stream()
+        .map(this::initializePost)
         .map(this::toResponse)
         .toList();
   }
@@ -61,14 +64,14 @@ public class PostService {
   public PostResponse getDiscoverablePost(Long postId) {
     MatchingPost post =
         matchingPostRepository
-            .findWithDetailsById(postId)
+            .findById(postId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
 
     if (post.getStatus() != PostStatus.OPEN) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found");
     }
 
-    return toResponse(post);
+    return toResponse(initializePost(post));
   }
 
   @Transactional
@@ -108,13 +111,20 @@ public class PostService {
   private MatchingPost requireOwnedPost(Long postId, Long ownerId) {
     MatchingPost post =
         matchingPostRepository
-            .findWithDetailsById(postId)
+            .findById(postId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
 
     if (!post.getOwner().getId().equals(ownerId)) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot access another partner's post");
     }
 
+    return post;
+  }
+
+  private MatchingPost initializePost(MatchingPost post) {
+    Hibernate.initialize(post.getOwner());
+    Hibernate.initialize(post.getRequirements());
+    Hibernate.initialize(post.getAvailableDates());
     return post;
   }
 
